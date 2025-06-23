@@ -26,13 +26,13 @@ export default function FutureDevelopment() {
   ];
 
   return (
-    <section className="py-16 px-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <section className="py-16 px-6 bg-[#FAF6E9]">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#2D2D2D] mb-4">
             Future Development
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-[#555555] max-w-3xl mx-auto leading-relaxed">
             We are continuously enhancing AutoScreen.ai with cutting-edge
             features and capabilities to stay ahead of the evolving recruitment
             landscape.
@@ -43,13 +43,13 @@ export default function FutureDevelopment() {
           {features.map(({ icon: Icon, title, desc }, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-[#FFFDF6] border border-[#DDEB9D] rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
             >
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#A0C878] to-[#DDEB9D] rounded-lg flex items-center justify-center mb-4">
                 <Icon className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-              <p className="text-gray-600 text-sm">{desc}</p>
+              <h3 className="font-semibold text-[#2D2D2D] mb-2">{title}</h3>
+              <p className="text-[#555555] text-sm">{desc}</p>
             </div>
           ))}
         </div>

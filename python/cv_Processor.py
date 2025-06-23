@@ -1,6 +1,7 @@
 import os
 from docsParser import parse_file
-from agent_Siya import query_ollama_stream
+from agent_Siya import query_gemini_cv_parser
+
 
 class CVProcessor:
     def __init__(self, model: str, db_connection):
@@ -85,7 +86,7 @@ Resume Content:
 Respond with ONLY the JSON object, nothing else.
 """
         try:
-            query_ollama_stream(prompt=prompt, model=self.model, db_connection=self.db_connection)
+            query_gemini_cv_parser(prompt=prompt,  db_connection=self.db_connection)
             return True
         except Exception as e:
             print(f"❌ Failed to process CV via Ollama: {e}")

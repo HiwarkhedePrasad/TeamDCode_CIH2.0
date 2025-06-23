@@ -27,15 +27,94 @@ def setup_job_requirements():
             title="Full-Stack Developer",
             required_skills=["JavaScript", "React", "Node.js", "MongoDB", "Express.js", "HTML", "CSS", "REST API", "Git"],
             preferred_skills=["TypeScript", "Next.js", "Docker", "AWS"],
-            min_experience=0.5,
+            min_experience=0,
             test_link="https://autoscreen.ai/assessment/:assessmentId",
             department="Engineering"
+        ),        JobRequirement(
+            title="UI/UX Designer",
+            required_skills=["Figma", "Adobe XD", "Wireframing", "Prototyping", "User Research", "Responsive Design","UI/UX"],
+            preferred_skills=["Illustrator", "Photoshop", "Accessibility", "Design Systems"],
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/ui-ux",
+            department="Design"
+        ),
+        JobRequirement(
+            title="DevOps Engineer",
+            required_skills=["Linux", "CI/CD", "Docker", "Kubernetes", "Git", "Bash"],
+            preferred_skills=["Terraform", "AWS", "Monitoring", "Ansible"],
+            min_experience=1,
+            test_link="https://autoscreen.ai/assessment/devops",
+            department="Infrastructure"
+        ),
+        JobRequirement(
+            title="Mobile App Developer (Android)",
+            required_skills=["Kotlin", "Java", "Android SDK", "REST APIs", "UI/UX Design"],
+            preferred_skills=["Jetpack Compose", "Firebase", "Unit Testing"],
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/android",
+            department="Mobile Development"
+        ),
+        JobRequirement(
+            title="Mobile App Developer (iOS)",
+            required_skills=["Swift", "Xcode", "iOS SDK", "UIKit", "REST APIs"],
+            preferred_skills=["SwiftUI", "Core Data", "Firebase"],
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/ios",
+            department="Mobile Development"
+        ),
+        JobRequirement(
+            title="Cloud Engineer",
+            required_skills=["AWS", "GCP", "Azure", "Cloud Networking", "Security", "Terraform"],
+            preferred_skills=["DevOps", "Monitoring Tools", "Serverless", "Cost Optimization"],
+            min_experience=0,
+            test_link="https://autoscreen.ai/assessment/cloud",
+            department="Infrastructure"
+        ),
+        JobRequirement(
+            title="QA Engineer",
+            required_skills=["Manual Testing", "Automation", "Selenium", "Test Cases", "Bug Tracking", "API Testing"],
+            preferred_skills=["JMeter", "Cypress", "CI/CD Integration", "Performance Testing"],
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/qa",
+            department="Quality Assurance"
+        ),
+        JobRequirement(
+            title="Product Manager",
+            required_skills=["Product Roadmap", "Agile", "Scrum", "User Stories", "Market Research", "Wireframing"],
+            preferred_skills=["SQL", "Analytics", "A/B Testing", "Figma"],
+            min_experience=0,
+            test_link="https://autoscreen.ai/assessment/product",
+            department="Product"
+        ),
+        JobRequirement(
+            title="Cybersecurity Analyst",
+            required_skills=["Network Security", "Vulnerability Assessment", "SIEM", "Firewalls", "Incident Response"],
+            preferred_skills=["Ethical Hacking", "Penetration Testing", "SOC", "Compliance Standards"],
+            min_experience=1,
+            test_link="https://autoscreen.ai/assessment/cybersecurity",
+            department="Security"
+        ),
+        JobRequirement(
+            title="Business Analyst",
+            required_skills=["Requirement Gathering", "Stakeholder Communication", "Data Analysis", "SQL", "Documentation"],
+            preferred_skills=["Power BI", "Tableau", "UML", "JIRA"],
+            min_experience=0,
+            test_link="https://autoscreen.ai/assessment/ba",
+            department="Business"
+        ),
+        JobRequirement(
+            title="Data Analyst",
+            required_skills=["Python", "SQL", "Pandas", "Excel", "Data Visualization", "Statistics"],
+            preferred_skills=["Power BI", "Tableau", "Machine Learning", "BigQuery"],
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/data-analyst",
+            department="Data"
         ),
         JobRequirement(
             title="Frontend Developer",
             required_skills=["JavaScript", "React", "HTML", "CSS", "Responsive Design", "Git", "Web APIs"],
             preferred_skills=["TypeScript", "Redux", "Webpack", "SASS"],
-            min_experience=0.5,
+            min_experience=0,
             test_link="https://autoscreen.ai/assessment/frontend",
             department="Engineering"
         ),
@@ -43,7 +122,7 @@ def setup_job_requirements():
             title="Backend Developer",
             required_skills=["Node.js", "Express.js", "MongoDB", "REST API", "Database Design", "Git", "Authentication"],
             preferred_skills=["Python", "Docker", "Redis", "Microservices"],
-            min_experience=0.5,
+            min_experience=0,
             test_link="https://autoscreen.ai/assessment/backend",
             department="Engineering"
         ),
@@ -121,7 +200,7 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
 def main():
     """Main function to run the CV processing and candidate evaluation workflow."""
     print("🚀 AutoScreen CV Processor with Skill Matching")
-    print("=" * 60)
+    print("=" * 40)
 
     # Load database and Ollama (AI model) configurations from environment variables
     db_config = DatabaseConfig.from_env()
@@ -179,7 +258,7 @@ def main():
 
     # Initialize SkillMatcher
     skill_matcher = SkillMatcher()
-    min_match_threshold = float(os.getenv("MIN_MATCH_THRESHOLD", 60.0))
+    min_match_threshold = float(os.getenv("MIN_MATCH_THRESHOLD", 40.0))
 
     # --- MATCHMAKING LOGIC MOVED HERE ---
     evaluation_results = {
