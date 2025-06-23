@@ -1,336 +1,293 @@
 #!/usr/bin/env python3
 """
-Database Manager Module
-Handles all MySQL database operations for CV processing
+CV Parser Module
+Handles CV content parsing using Ollama AI and fallback methods
 """
 
-import mysql.connector
-from mysql.connector import Error
-from datetime import date
-from typing import Dict, List, Optional, Any
+import json
+import re
+import requests
+from typing import Dict, List, Any
 import logging
 
-from config import DatabaseConfig
+from config import OllamaConfig
+# Use legacy ollama client
+from ollama_client import query_ollama_stream
 
 logger = logging.getLogger(__name__)
 
-class DatabaseManager:
-    """Manages MySQL database operations for CV data"""
+class CVParser:
+    """CV Parser using Ollama AI with fallback regex parsing"""
     
-    def __init__(self, config: DatabaseConfig):
+    def __init__(self, config: OllamaConfig):
         self.config = config
-        self.connection = None
-        self.cursor = None
     
-    def connect(self) -> bool:
-        """Establish database connection"""
-        try:
-            self.connection = mysql.connector.connect(
-                host=self.config.host,
-                user=self.config.user,
-                password=self.config.password,
-                database=self.config.database,
-                port=self.config.port,
-                autocommit=False
-            )
-            self.cursor = self.connection.cursor()
-            logger.info("✅ Successfully connected to MySQL database")
-            return True
-        except Error as err:
-            logger.error(f"❌ Database connection failed: {err}")
-            return False
-    
-    def disconnect(self):
-        """Close database connection"""
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            self.connection.close()
-        logger.info("🔌 Database connection closed")
-    
-    def commit(self):
-        """Commit current transaction"""
-        if self.connection:
-            self.connection.commit()
-    
-    def rollback(self):
-        """Rollback current transaction"""
-        if self.connection:
-            self.connection.rollback()
-    
-    def insert_candidate(self, candidate_data: Dict[str, Any]) -> Optional[int]:
+    def call_ollama_api(self, cv_content: str) -> str:
         """
-        Insert candidate into database
+        Call Ollama API for CV parsing using legacy client
         
         Args:
-            candidate_data: Dictionary containing candidate information
+            cv_content: Raw CV content text
             
         Returns:
-            candidate_id if successful, None otherwise
+            JSON response from Ollama
         """
         try:
-            personal = candidate_data.get('personal', {})
+            system_prompt = self._get_system_prompt()
+            user_prompt = self._get_user_prompt(cv_content)
             
-            query = """
-            INSERT INTO candidates (name, role, summary, email, phone, location, 
-                                 portfolio_url, github_url, linkedin_url, total_experience, 
-                                 education_gap, work_gap, last_updated)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
+            # Combine system and user prompts
+            full_prompt = f"{system_prompt}\n\n{user_prompt}"
             
-            # Determine role from experience or default
-            role = "Software Developer"
-            if candidate_data.get('experience'):
-                role = candidate_data['experience'][0].get('title', 'Software Developer')
+            logger.info("🤖 Calling Ollama API to parse CV content...")
             
-            values = (
-                personal.get('name', ''),
-                role,
-                personal.get('summary', ''),
-                personal.get('email', ''),
-                personal.get('phone', ''),
-                personal.get('location', ''),
-                None,  # portfolio_url
-                None,  # github_url  
-                None,  # linkedin_url
-                candidate_data.get('total_experience', 0.0),
-                candidate_data.get('has_education_gaps', False),
-                candidate_data.get('has_employment_gaps', False),
-                date.today()
-            )
+            # Use legacy query function but capture output instead of printing
+            import io
+            import sys
+            from contextlib import redirect_stdout
             
-            self.cursor.execute(query, values)
-            candidate_id = self.cursor.lastrowid
+            # Capture the streamed output
+            f = io.StringIO()
+            with redirect_stdout(f):
+                query_ollama_stream(full_prompt, model=self.config.model)
             
-            logger.info(f"✅ Inserted candidate with ID: {candidate_id}")
-            return candidate_id
+            response = f.getvalue()
+            return response
             
-        except Error as err:
-            logger.error(f"❌ Error inserting candidate: {err}")
-            return None
+        except Exception as e:
+            logger.error(f"❌ Ollama API call failed: {e}")
+            return ""
     
-    def insert_experience(self, candidate_id: int, experiences: List[Dict]) -> bool:
+    def parse_cv_content(self, cv_content: str) -> Dict[str, Any]:
         """
-        Insert experience records for a candidate
+        Parse CV content using Ollama AI
         
         Args:
-            candidate_id: ID of the candidate
-            experiences: List of experience dictionaries
+            cv_content: Raw CV content text
             
         Returns:
-            True if successful, False otherwise
+            Parsed CV data as dictionary
         """
-        if not experiences:
-            logger.info("ℹ️ No experience data to insert")
-            return True
-            
+        response = self.call_ollama_api(cv_content)
+        
         try:
-            query = """
-            INSERT INTO experience (candidate_id, title, company, start_date, end_date, description)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            """
+            # Clean the response - sometimes Ollama adds extra text
+            json_start = response.find('{')
+            json_end = response.rfind('}') + 1
             
-            for exp in experiences:
-                # Handle null end_date
-                end_date = exp.get('end_date')
-                if end_date == 'null' or end_date == '':
-                    end_date = None
+            if json_start != -1 and json_end != -1:
+                json_str = response[json_start:json_end]
+                parsed_data = json.loads(json_str)
                 
-                values = (
-                    candidate_id,
-                    exp.get('title', ''),
-                    exp.get('company', ''),
-                    exp.get('start_date'),
-                    end_date,
-                    exp.get('description', '')
-                )
-                self.cursor.execute(query, values)
-            
-            logger.info(f"✅ Inserted {len(experiences)} experience records")
-            return True
-            
-        except Error as err:
-            logger.error(f"❌ Error inserting experience: {err}")
-            return False
+                # Validate parsed data
+                if self._validate_parsed_data(parsed_data):
+                    logger.info("✅ Successfully parsed CV with Ollama")
+                    return parsed_data
+                else:
+                    logger.warning("⚠️ Parsed data validation failed, using fallback")
+                    return self.fallback_parse(cv_content)
+            else:
+                raise ValueError("No valid JSON found in response")
+                
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"❌ Failed to parse Ollama response as JSON: {e}")
+            logger.error(f"Raw response: {response[:500]}...")  # Log first 500 chars
+            return self.fallback_parse(cv_content)
     
-    def insert_education(self, candidate_id: int, education: List[Dict]) -> bool:
+    def fallback_parse(self, cv_content: str) -> Dict[str, Any]:
         """
-        Insert education records for a candidate
+        Fallback parsing method using regex patterns
         
         Args:
-            candidate_id: ID of the candidate
-            education: List of education dictionaries
+            cv_content: Raw CV content text
             
         Returns:
-            True if successful, False otherwise
+            Basic parsed CV data
         """
-        if not education:
-            logger.info("ℹ️ No education data to insert")
-            return True
-            
-        try:
-            query = """
-            INSERT INTO education (candidate_id, institute, degree, start_date, end_date)
-            VALUES (%s, %s, %s, %s, %s)
-            """
-            
-            for edu in education:
-                values = (
-                    candidate_id,
-                    edu.get('institute', ''),
-                    edu.get('degree', ''),
-                    edu.get('start_date'),
-                    edu.get('end_date')
-                )
-                self.cursor.execute(query, values)
-            
-            logger.info(f"✅ Inserted {len(education)} education records")
-            return True
-            
-        except Error as err:
-            logger.error(f"❌ Error inserting education: {err}")
+        logger.info("⚠️ Using fallback regex parsing method...")
+        
+        # Basic regex patterns
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        phone_pattern = r'[+]?[\d\s\-\(\)]{10,}'
+        
+        # Extract basic information
+        email_match = re.search(email_pattern, cv_content)
+        phone_match = re.search(phone_pattern, cv_content)
+        
+        # Split into lines for processing
+        lines = [line.strip() for line in cv_content.split('\n') if line.strip()]
+        name = lines[0] if lines else "Unknown"
+        
+        # Extract skills using keyword matching
+        skills = self._extract_skills_regex(cv_content)
+        
+        # Extract experience and education sections
+        experience = self._extract_experience_regex(cv_content)
+        education = self._extract_education_regex(cv_content)
+        
+        return {
+            "personal": {
+                "name": name,
+                "email": email_match.group() if email_match else "",
+                "phone": phone_match.group() if phone_match else "",
+                "location": "Not specified",
+                "summary": self._extract_summary_regex(cv_content)
+            },
+            "experience": experience,
+            "education": education,
+            "skills": skills,
+            "projects": self._extract_projects_regex(cv_content),
+            "soft_skills": [
+                {"skill": "Problem Solving", "strength": "Medium"},
+                {"skill": "Communication", "strength": "Medium"},
+                {"skill": "Teamwork", "strength": "Medium"}
+            ],
+            "total_experience": self._calculate_experience(experience),
+            "has_employment_gaps": False,
+            "has_education_gaps": False
+        }
+    
+    def _get_system_prompt(self) -> str:
+        """Get system prompt for Ollama"""
+        return """You are an expert CV parser. Extract information from CVs and return structured JSON data.
+        Always return valid JSON format only, no additional text or explanations.
+        
+        Extract the following information accurately:
+        - Personal information (name, email, phone, location)
+        - Professional summary
+        - Work experience with dates, companies, roles, descriptions
+        - Education with institutions, degrees, dates
+        - Technical skills
+        - Projects with descriptions and technologies
+        - Soft skills (inferred from experience and projects)
+        - Calculate total experience in years
+        - Identify any employment or education gaps
+        
+        Return JSON in this exact structure:
+        {
+            "personal": {
+                "name": "string",
+                "email": "string", 
+                "phone": "string",
+                "location": "string",
+                "summary": "string"
+            },
+            "experience": [
+                {
+                    "title": "string",
+                    "company": "string",
+                    "start_date": "YYYY-MM-DD",
+                    "end_date": "YYYY-MM-DD or null",
+                    "description": "string"
+                }
+            ],
+            "education": [
+                {
+                    "institute": "string",
+                    "degree": "string",
+                    "start_date": "YYYY-MM-DD",
+                    "end_date": "YYYY-MM-DD"
+                }
+            ],
+            "skills": ["skill1", "skill2", "skill3"],
+            "projects": [
+                {
+                    "title": "string",
+                    "description": "string with technologies used"
+                }
+            ],
+            "soft_skills": [
+                {
+                    "skill": "string",
+                    "strength": "High/Medium/Low"
+                }
+            ],
+            "total_experience": 2.5,
+            "has_employment_gaps": false,
+            "has_education_gaps": false
+        }"""
+    
+    def _get_user_prompt(self, cv_content: str) -> str:
+        """Get user prompt for Ollama"""
+        return f"""Parse this CV content and extract information in JSON format:
+
+        CV CONTENT:
+        {cv_content}
+        
+        Return only valid JSON, no other text or explanations."""
+    
+    def _validate_parsed_data(self, data: Dict[str, Any]) -> bool:
+        """Validate parsed data structure"""
+        required_keys = ['personal', 'experience', 'education', 'skills']
+        
+        for key in required_keys:
+            if key not in data:
+                return False
+        
+        # Check personal information
+        if not isinstance(data['personal'], dict):
             return False
-    
-    def insert_skills(self, candidate_id: int, skills: List[str]) -> bool:
-        """
-        Insert skills for a candidate
         
-        Args:
-            candidate_id: ID of the candidate
-            skills: List of skill strings
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        if not skills:
-            logger.info("ℹ️ No skills data to insert")
-            return True
-            
-        try:
-            query = "INSERT INTO skills (candidate_id, skill) VALUES (%s, %s)"
-            
-            for skill in skills:
-                if skill and skill.strip():  # Skip empty skills
-                    self.cursor.execute(query, (candidate_id, skill.strip()))
-            
-            logger.info(f"✅ Inserted {len(skills)} skills")
-            return True
-            
-        except Error as err:
-            logger.error(f"❌ Error inserting skills: {err}")
+        # Check if name exists
+        if not data['personal'].get('name'):
             return False
-    
-    def insert_projects(self, candidate_id: int, projects: List[Dict]) -> bool:
-        """
-        Insert projects for a candidate
         
-        Args:
-            candidate_id: ID of the candidate
-            projects: List of project dictionaries
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        if not projects:
-            logger.info("ℹ️ No projects data to insert")
-            return True
-            
-        try:
-            query = """
-            INSERT INTO projects (candidate_id, title, description)
-            VALUES (%s, %s, %s)
-            """
-            
-            for project in projects:
-                values = (
-                    candidate_id,
-                    project.get('title', ''),
-                    project.get('description', '')
-                )
-                self.cursor.execute(query, values)
-            
-            logger.info(f"✅ Inserted {len(projects)} projects")
-            return True
-            
-        except Error as err:
-            logger.error(f"❌ Error inserting projects: {err}")
-            return False
+        return True
     
-    def insert_soft_skills(self, candidate_id: int, soft_skills: List[Dict]) -> bool:
-        """
-        Insert soft skills for a candidate
+    def _extract_skills_regex(self, cv_content: str) -> List[str]:
+        """Extract skills using regex patterns"""
+        # Common technical skills
+        skill_keywords = [
+            'Python', 'JavaScript', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Swift',
+            'React', 'Angular', 'Vue', 'Node.js', 'Django', 'Flask', 'Spring',
+            'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle',
+            'HTML', 'CSS', 'Bootstrap', 'Tailwind',
+            'Git', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP',
+            'Linux', 'Windows', 'MacOS',
+            'Agile', 'Scrum', 'DevOps', 'CI/CD'
+        ]
         
-        Args:
-            candidate_id: ID of the candidate
-            soft_skills: List of soft skill dictionaries
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        if not soft_skills:
-            logger.info("ℹ️ No soft skills data to insert")
-            return True
-            
-        try:
-            query = """
-            INSERT INTO soft_skills (candidate_id, skill, strength_level)
-            VALUES (%s, %s, %s)
-            """
-            
-            for skill in soft_skills:
-                values = (
-                    candidate_id,
-                    skill.get('skill', ''),
-                    skill.get('strength', 'Medium')
-                )
-                self.cursor.execute(query, values)
-            
-            logger.info(f"✅ Inserted {len(soft_skills)} soft skills")
-            return True
-            
-        except Error as err:
-            logger.error(f"❌ Error inserting soft skills: {err}")
-            return False
+        found_skills = []
+        cv_lower = cv_content.lower()
+        
+        for skill in skill_keywords:
+            if skill.lower() in cv_lower:
+                found_skills.append(skill)
+        
+        return found_skills
     
-    def get_candidate_by_email(self, email: str) -> Optional[Dict]:
-        """
-        Get candidate by email to check for duplicates
-        
-        Args:
-            email: Email address to search for
-            
-        Returns:
-            Candidate data if found, None otherwise
-        """
-        try:
-            query = "SELECT * FROM candidates WHERE email = %s"
-            self.cursor.execute(query, (email,))
-            result = self.cursor.fetchone()
-            
-            if result:
-                # Convert result to dictionary (assuming you have column names)
-                columns = [desc[0] for desc in self.cursor.description]
-                return dict(zip(columns, result))
-            
-            return None
-            
-        except Error as err:
-            logger.error(f"❌ Error getting candidate by email: {err}")
-            return None
+    def _extract_experience_regex(self, cv_content: str) -> List[Dict]:
+        """Extract experience using regex patterns"""
+        # This is a basic implementation
+        # In a real scenario, you'd want more sophisticated parsing
+        return []
     
-    def get_candidate_count(self) -> int:
-        """
-        Get total number of candidates in database
+    def _extract_education_regex(self, cv_content: str) -> List[Dict]:
+        """Extract education using regex patterns"""
+        # This is a basic implementation
+        return []
+    
+    def _extract_projects_regex(self, cv_content: str) -> List[Dict]:
+        """Extract projects using regex patterns"""
+        # This is a basic implementation
+        return []
+    
+    def _extract_summary_regex(self, cv_content: str) -> str:
+        """Extract professional summary"""
+        lines = cv_content.split('\n')
+        # Look for summary-like content in first few lines
+        for i, line in enumerate(lines[:10]):
+            if len(line.strip()) > 50 and any(word in line.lower() for word in 
+                ['experience', 'professional', 'skilled', 'expertise']):
+                return line.strip()
         
-        Returns:
-            Number of candidates
-        """
-        try:
-            query = "SELECT COUNT(*) FROM candidates"
-            self.cursor.execute(query)
-            result = self.cursor.fetchone()
-            return result[0] if result else 0
-            
-        except Error as err:
-            logger.error(f"❌ Error getting candidate count: {err}")
-            return 0
+        return "Professional with experience in software development"
+    
+    def _calculate_experience(self, experience: List[Dict]) -> float:
+        """Calculate total years of experience"""
+        if not experience:
+            return 1.0  # Default assumption
+        
+        # This would need proper date parsing
+        # For now, return a reasonable default
+        return len(experience) * 2.0  # Assume 2 years per job

@@ -30,8 +30,7 @@ class DatabaseConfig:
 
 @dataclass
 class OllamaConfig:
-    """Ollama configuration class"""
-    base_url: str
+    """Ollama configuration class - compatible with legacy client"""
     model: str
     timeout: int = 120
     
@@ -39,8 +38,7 @@ class OllamaConfig:
     def from_env(cls) -> 'OllamaConfig':
         """Create Ollama config from environment variables"""
         return cls(
-            base_url=os.getenv('OLLAMA_URL', 'http://localhost:11434'),
-            model=os.getenv('OLLAMA_MODEL', 'llama2'),
+            model=os.getenv('OLLAMA_MODEL', 'llama3'),  # Changed default to match legacy
             timeout=int(os.getenv('OLLAMA_TIMEOUT', '120'))
         )
 
