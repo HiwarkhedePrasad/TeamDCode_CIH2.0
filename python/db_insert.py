@@ -177,7 +177,7 @@ def insert_structured_cv_data(data, db):
 
         db.commit()
         print(f"🎉 Successfully inserted all data for candidate: {name}")
-        return True
+        return candidate_id
         
     except Exception as e:
         print(f"❌ Critical database insertion error: {e}")
