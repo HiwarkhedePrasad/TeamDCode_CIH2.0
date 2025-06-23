@@ -1,57 +1,44 @@
-#!/usr/bin/env python3
-"""
-Configuration module for CV Processing Pipeline
-Manages database and API configurations
-"""
-
 import os
-from dataclasses import dataclass
-from typing import Optional
+from dotenv import load_dotenv
 
-@dataclass
+load_dotenv()  # Load variables from .env file if present
+
 class DatabaseConfig:
-    """Database configuration class"""
-    host: str
-    user: str
-    password: str
-    database: str
-    port: int = 3306
-    
+    def __init__(self, host, port, user, password, database):
+        self.host = host
+        self.port = int(port)
+        self.user = user
+        self.password = password
+        self.database = database
+
     @classmethod
-    def from_env(cls) -> 'DatabaseConfig':
-        """Create database config from environment variables"""
+    def from_env(cls):
         return cls(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', ''),
-            database=os.getenv('DB_NAME', 'CIH2'),
-            port=int(os.getenv('DB_PORT', '3306'))
+            host=os.getenv("DB_HOST", "localhost"),
+            port=os.getenv("DB_PORT", 3306),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", "root"),
+            database=os.getenv("DB_NAME", "CIH2")
         )
 
-@dataclass
 class OllamaConfig:
-    """Ollama configuration class - compatible with legacy client"""
-    model: str
-    timeout: int = 120
-    
+    def __init__(self, model):
+        self.model = model
+
     @classmethod
-    def from_env(cls) -> 'OllamaConfig':
-        """Create Ollama config from environment variables"""
+    def from_env(cls):
         return cls(
-            model=os.getenv('OLLAMA_MODEL', 'llama3'),  # Changed default to match legacy
-            timeout=int(os.getenv('OLLAMA_TIMEOUT', '120'))
+            model=os.getenv("OLLAMA_MODEL", "llama3")
         )
 
-@dataclass
 class AppConfig:
-    """Application configuration"""
-    log_level: str = "INFO"
-    log_format: str = "%(asctime)s - %(levelname)s - %(message)s"
-    
+    def __init__(self, log_level="INFO", log_format="%(asctime)s - %(levelname)s - %(message)s"):
+        self.log_level = log_level
+        self.log_format = log_format
+
     @classmethod
-    def from_env(cls) -> 'AppConfig':
-        """Create app config from environment variables"""
+    def from_env(cls):
         return cls(
-            log_level=os.getenv('LOG_LEVEL', 'INFO'),
-            log_format=os.getenv('LOG_FORMAT', '%(asctime)s - %(levelname)s - %(message)s')
+            log_level=os.getenv("LOG_LEVEL", "INFO"),
+            log_format=os.getenv("LOG_FORMAT", "%(asctime)s - %(levelname)s - %(message)s")
         )

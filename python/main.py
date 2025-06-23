@@ -1,44 +1,39 @@
-#!/usr/bin/env python3
-
-import os
-from docsParser import parse_file
-from agent_Siya import query_ollama_stream
-from cv_processor import CVProcessor
+import mysql.connector
 from config import DatabaseConfig, OllamaConfig
+from cv_Processor import CVProcessor
 
-def process_cv_from_file(file_path: str, processor: CVProcessor, model: str):
-    print(f"\n📄 Parsing file: {file_path}")
-    cv_content = parse_file(file_path)
-
-    if not cv_content or not cv_content.strip():
-        print("❌ No content extracted from file")
-        return
-
-    print(f"✅ Extracted {len(cv_content)} characters")
-    success = processor.process_cv(cv_content)
-
-    if success:
-        print("🎉 SUCCESS! CV inserted into database.")
-        print("\n🧠 Generating summary via Ollama...\n")
-        query_ollama_stream(f"Summarize this CV:\n\n{cv_content[:2000]}", model=model)
-    else:
-        print("❌ Failed to process CV")
+def connect_to_db(db_config):
+    return mysql.connector.connect(
+        host=db_config.host,
+        user=db_config.user,
+        password=db_config.password,
+        database=db_config.database
+    )
 
 def main():
+    print("🚀 AutoScreen CV Processor")
+    print("=" * 50)
+
     db_config = DatabaseConfig.from_env()
     ollama_config = OllamaConfig.from_env()
 
-    print("🚀 AutoScreen CV Processor")
-    print("=" * 40)
+    try:
+        db_connection = connect_to_db(db_config)
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        return
 
     file_path = input("Enter path to .pdf or .docx CV file: ").strip()
 
-    if not os.path.exists(file_path):
-        print(f"❌ File not found: {file_path}")
-        return
+    processor = CVProcessor(model=ollama_config.model, db_connection=db_connection)
+    success = processor.process(file_path)
 
-    with CVProcessor(db_config, ollama_config) as processor:
-        process_cv_from_file(file_path, processor, ollama_config.model)
+    if success:
+        print("\n✅ Process complete. Structured data inserted.")
+    else:
+        print("\n❌ CV processing failed.")
+
+    db_connection.close()
 
 if __name__ == "__main__":
     main()
