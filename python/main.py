@@ -1,13 +1,18 @@
-
-
 import mysql.connector
+import os
 from config import DatabaseConfig, OllamaConfig
 from cv_Processor import CVProcessor
-from FilterAndTestLink import JobRequirement, CandidateEvaluator
-from FilterAndTestLink import EmailSender
-import os
+
+# --- REQUIRED IMPORTS FOR MATCHING IN MAIN ---
+# Import JobRequirement, SkillMatcher, and EmailSender from skill_matcher.py
+from FilterAndTestLink import JobRequirement, SkillMatcher, EmailSender
+# No longer importing CandidateEvaluator if its core logic is moved here
+# If you still have candidate_evaluator.py, you can now delete it or keep it as a placeholder if no other functions use it.
+# from candidate_evaluator import CandidateEvaluator
+# --- END REQUIRED IMPORTS ---
 
 def connect_to_db(db_config):
+    """Establishes a connection to the MySQL database."""
     return mysql.connector.connect(
         host=db_config.host,
         user=db_config.user,
@@ -16,89 +21,70 @@ def connect_to_db(db_config):
     )
 
 def setup_job_requirements():
-    """Define job requirements - customize these based on your open positions"""
-    
-    job_requirements = [
+    """Defines a list of predefined job requirements."""
+    return [
         JobRequirement(
             title="Full-Stack Developer",
-            required_skills=[
-                "JavaScript", "React", "Node.js", "MongoDB", "Express.js",
-                "HTML", "CSS", "REST API", "Git"
-            ],
+            required_skills=["JavaScript", "React", "Node.js", "MongoDB", "Express.js", "HTML", "CSS", "REST API", "Git"],
             preferred_skills=["TypeScript", "Next.js", "Docker", "AWS"],
-            min_experience=2.0,
+            min_experience=0.5,
             test_link="https://autoscreen.ai/assessment/:assessmentId",
             department="Engineering"
         ),
-        
         JobRequirement(
             title="Frontend Developer",
-            required_skills=[
-                "JavaScript", "React", "HTML", "CSS", "Responsive Design",
-                "Git", "Web APIs"
-            ],
+            required_skills=["JavaScript", "React", "HTML", "CSS", "Responsive Design", "Git", "Web APIs"],
             preferred_skills=["TypeScript", "Redux", "Webpack", "SASS"],
-            min_experience=1.5,
-            test_link="https://your-testing-platform.com/frontend-test/12346",
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/frontend",
             department="Engineering"
         ),
-        
         JobRequirement(
             title="Backend Developer",
-            required_skills=[
-                "Node.js", "Express.js", "MongoDB", "REST API", "Database Design",
-                "Git", "Authentication"
-            ],
+            required_skills=["Node.js", "Express.js", "MongoDB", "REST API", "Database Design", "Git", "Authentication"],
             preferred_skills=["Python", "Docker", "Redis", "Microservices"],
-            min_experience=2.5,
-            test_link="https://your-testing-platform.com/backend-test/12347",
+            min_experience=0.5,
+            test_link="https://autoscreen.ai/assessment/backend",
             department="Engineering"
         ),
-        
         JobRequirement(
             title="AI/ML Developer",
-            required_skills=[
-                "Python", "Machine Learning", "Data Science", "TensorFlow", 
-                "Pandas", "NumPy", "Statistics"
-            ],
+            required_skills=["Python", "Machine Learning", "Data Science", "TensorFlow", "Pandas", "NumPy", "Statistics"],
             preferred_skills=["PyTorch", "Deep Learning", "NLP", "Computer Vision"],
-            min_experience=1.0,
-            test_link="https://your-testing-platform.com/ai-test/12348",
+            min_experience=0,
+            test_link="https://autoscreen.ai/assessment/ai-ml",
             department="AI Research"
         )
     ]
-    
-    return job_requirements
+
+def get_last_inserted_candidate_id(db_connection):
+    """Retrieves the ID of the last inserted candidate from the 'candidates' table."""
+    cursor = db_connection.cursor()
+    cursor.execute("SELECT MAX(id) FROM candidates")
+    result = cursor.fetchone()
+    cursor.close()
+    return result[0] if result else None
 
 def get_candidate_data_from_db(db_connection, candidate_id):
-    """Retrieve candidate data from database for evaluation"""
+    """Fetches comprehensive candidate data, including skills, from the database."""
     cursor = db_connection.cursor(dictionary=True)
-    
-    # Get candidate basic info
-    cursor.execute("""
-        SELECT * FROM candidates WHERE id = %s
-    """, (candidate_id,))
+    cursor.execute("SELECT * FROM candidates WHERE id = %s", (candidate_id,))
     candidate = cursor.fetchone()
-    
+
     if not candidate:
+        cursor.close()
         return None
-    
-    # Get skills
-    cursor.execute("""
-        SELECT skill FROM skills WHERE candidate_id = %s
-    """, (candidate_id,))
+
+    cursor.execute("SELECT skill FROM skills WHERE candidate_id = %s", (candidate_id,))
     skills = [row['skill'] for row in cursor.fetchall()]
-    
-    # Add skills to candidate data
     candidate['skills'] = skills
-    
+
     cursor.close()
     return candidate
 
 def log_evaluation_results(db_connection, candidate_id, evaluation_results):
-    """Log evaluation results to database for tracking"""
+    """Logs the results of the candidate evaluation into a dedicated table."""
     cursor = db_connection.cursor()
-    
     try:
         # Create evaluation_logs table if it doesn't exist
         cursor.execute("""
@@ -113,10 +99,9 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
                 FOREIGN KEY (candidate_id) REFERENCES candidates(id)
             )
         """)
-        
         # Insert evaluation results
         cursor.execute("""
-            INSERT INTO evaluation_logs 
+            INSERT INTO evaluation_logs
             (candidate_id, total_positions_checked, qualified_positions, qualified_for, notifications_sent)
             VALUES (%s, %s, %s, %s, %s)
         """, (
@@ -126,24 +111,23 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
             ', '.join(evaluation_results['qualified_positions']),
             evaluation_results['notifications_sent']
         ))
-        
         db_connection.commit()
         print(f"✅ Evaluation results logged for candidate ID: {candidate_id}")
-        
     except Exception as e:
         print(f"⚠️ Failed to log evaluation results: {e}")
     finally:
         cursor.close()
 
 def main():
+    """Main function to run the CV processing and candidate evaluation workflow."""
     print("🚀 AutoScreen CV Processor with Skill Matching")
     print("=" * 60)
 
-    # Load configurations
+    # Load database and Ollama (AI model) configurations from environment variables
     db_config = DatabaseConfig.from_env()
     ollama_config = OllamaConfig.from_env()
 
-    # Connect to database
+    # Establish database connection
     try:
         db_connection = connect_to_db(db_config)
         print("✅ Database connected successfully")
@@ -151,77 +135,141 @@ def main():
         print(f"❌ Database connection failed: {e}")
         return
 
-    # Setup email sender
+    # Attempt to configure email service
+    email_sender = None
     try:
         email_sender = EmailSender.from_env()
-        print("✅ Email service configured")
+        # More robust check for email credentials
+        if email_sender and email_sender.email and email_sender.password:
+            print("✅ Email service configured")
+        else:
+            print("⚠️ Email service configuration incomplete (missing EMAIL_USER or EMAIL_PASSWORD environment variables).")
+            email_sender = None # Explicitly set to None if credentials are truly missing
     except Exception as e:
-        print(f"⚠️ Email service configuration failed: {e}")
-        print("   Continuing without email notifications...")
+        print(f"⚠️ Email service setup failed: {e}")
         email_sender = None
 
     # Setup job requirements
     job_requirements = setup_job_requirements()
-    print(f"✅ Configured {len(job_requirements)} job positions")
+    print(f"✅ Loaded {len(job_requirements)} job positions")
 
-    # Setup candidate evaluator
-    min_threshold = float(os.getenv("MIN_MATCH_THRESHOLD", 60.0))
-    if email_sender:
-        evaluator = CandidateEvaluator(email_sender, min_threshold)
-        print(f"✅ Candidate evaluator ready (Min threshold: {min_threshold}%)")
-
-    # Process CV
-    file_path = input("\nEnter path to .pdf or .docx CV file: ").strip()
-    
+    # Get CV file path from user and process it
+    file_path = input("\n📄 Enter path to CV file (.pdf/.docx): ").strip()
     processor = CVProcessor(model=ollama_config.model, db_connection=db_connection)
     success = processor.process(file_path)
 
-    if success:
-        print("\n✅ CV processing complete. Structured data inserted.")
-        
-        # Get the last inserted candidate ID
-        cursor = db_connection.cursor()
-        cursor.execute("SELECT LAST_INSERT_ID()")
-        candidate_id = cursor.fetchone()[0]
-        cursor.close()
-        
-        if candidate_id and email_sender:
-            print(f"\n🔍 Starting skill evaluation for candidate ID: {candidate_id}")
-            
-            # Get candidate data for evaluation
-            candidate_data = get_candidate_data_from_db(db_connection, candidate_id)
-            
-            if candidate_data:
-                # Evaluate candidate and send notifications
-                evaluation_results = evaluator.evaluate_and_notify(
-                    candidate_data, 
-                    job_requirements
-                )
-                
-                # Log results
-                log_evaluation_results(db_connection, candidate_id, evaluation_results)
-                
-                # Print summary
-                print(f"\n📋 EVALUATION SUMMARY")
-                print("=" * 40)
-                print(f"Candidate: {evaluation_results['candidate_name']}")
-                print(f"Email: {evaluation_results['candidate_email']}")
-                print(f"Positions Evaluated: {len(evaluation_results['evaluations'])}")
-                print(f"Qualified Positions: {len(evaluation_results['qualified_positions'])}")
-                if evaluation_results['qualified_positions']:
-                    print(f"Qualified For: {', '.join(evaluation_results['qualified_positions'])}")
-                print(f"Test Invitations Sent: {evaluation_results['notifications_sent']}")
-                
-                if evaluation_results['notifications_sent'] > 0:
-                    print(f"\n🎉 SUCCESS: Candidate qualified and test invitations sent!")
-                else:
-                    print(f"\n📝 INFO: Candidate processed but did not qualify for available positions.")
+    if not success:
+        print("❌ CV processing failed.")
+        return
+
+    print("✅ CV processing complete. Structured data inserted.")
+    candidate_id = get_last_inserted_candidate_id(db_connection)
+
+    if not candidate_id:
+        print("⚠️ No candidate ID retrieved from database. Cannot proceed with evaluation.")
+        return
+
+    # Fetch candidate data
+    print(f"\n🔍 Retrieving candidate data for ID: {candidate_id}")
+    candidate_data = get_candidate_data_from_db(db_connection, candidate_id)
+
+    if not candidate_data:
+        print("❌ Failed to retrieve candidate data for evaluation.")
+        return
+
+    # Initialize SkillMatcher
+    skill_matcher = SkillMatcher()
+    min_match_threshold = float(os.getenv("MIN_MATCH_THRESHOLD", 60.0))
+
+    # --- MATCHMAKING LOGIC MOVED HERE ---
+    evaluation_results = {
+        "candidate_name": candidate_data.get("name"),
+        "candidate_email": candidate_data.get("email"),
+        "evaluations": [],
+        "notifications_sent": 0,
+        "qualified_positions": []
+    }
+
+    candidate_skills = candidate_data.get("skills", [])
+    if not candidate_skills:
+        print(f"⚠️ No skills found for candidate {candidate_data.get('name')}. Skill matching will be limited or ineffective.")
+
+    print(f"\n🔍 Evaluating {candidate_data.get('name')} for {len(job_requirements)} positions...")
+
+    for job_req in job_requirements:
+        print(f"\n📋 Checking fit for: {job_req.title}")
+
+        # Perform skill matching
+        matches = skill_matcher.find_skill_matches(candidate_skills, job_req.required_skills)
+        match_score, match_details = skill_matcher.calculate_match_score(matches, len(job_req.required_skills))
+
+        # --- FIX FOR TypeError: '>=' not supported between instances of 'NoneType' and 'float' ---
+        raw_candidate_experience = candidate_data.get("total_experience")
+        candidate_experience = 0.0 # Default to 0.0 if not found or problematic
+
+        if raw_candidate_experience is not None:
+            try:
+                candidate_experience = float(raw_candidate_experience)
+            except (ValueError, TypeError):
+                print(f"⚠️ Warning: 'total_experience' value '{raw_candidate_experience}' for candidate {candidate_data.get('name')} (ID: {candidate_id}) is not a valid number. Defaulting experience to 0.")
+                candidate_experience = 0.0
+        # --- END FIX ---
+
+        meets_experience = candidate_experience >= job_req.min_experience
+
+        # Compile evaluation for this job
+        evaluation = {
+            "job_title": job_req.title,
+            "match_score": match_score,
+            "match_details": match_details,
+            "meets_experience": meets_experience,
+            "qualified": match_score >= min_match_threshold and meets_experience,
+            "matched_skills": [m.candidate_skill for m in matches] # Use candidate's original skill string here for readability
+        }
+        evaluation_results["evaluations"].append(evaluation)
+
+        # Print evaluation details for the job
+        print(f"   📊 Match Score: {match_score:.1f}%")
+        print(f"   👤 Experience: {candidate_experience} years (Required: {job_req.min_experience})")
+        print(f"   ✅ Matched Skills: {', '.join(evaluation['matched_skills']) if evaluation['matched_skills'] else 'None'}")
+
+
+        # Check qualification and send email if applicable
+        if evaluation["qualified"]:
+            print(f"   🎯 Candidate QUALIFIED for {job_req.title}")
+            if email_sender: # Only send if email_sender was successfully configured
+                success = email_sender.send_test_invitation(candidate_data, job_req, match_details)
+                if success:
+                    evaluation_results["notifications_sent"] += 1
+                    evaluation_results["qualified_positions"].append(job_req.title)
             else:
-                print("❌ Could not retrieve candidate data for evaluation")
+                print("   ⚠️ Email service not available (due to setup failure or missing credentials), skipping email notification for this position.")
         else:
-            print("⚠️ Skipping evaluation (no email service or candidate ID)")
+            print(f"   ❌ Candidate not qualified for {job_req.title}")
+            reasons = []
+            if match_score < min_match_threshold:
+                reasons.append(f"Low skill match ({match_score:.1f}% < {min_match_threshold:.1f}%)")
+            if not meets_experience:
+                reasons.append(f"Insufficient experience ({candidate_experience} years < {job_req.min_experience} years)")
+            print(f"     Reasons: {', '.join(reasons) if reasons else 'Unknown'}")
+    # --- END MATCHMAKING LOGIC IN MAIN ---
+
+    # Log overall evaluation results
+    log_evaluation_results(db_connection, candidate_id, evaluation_results)
+
+    # Print overall evaluation summary
+    print("\n📋 OVERALL EVALUATION SUMMARY")
+    print("=" * 40)
+    print(f"Candidate: {evaluation_results['candidate_name']}")
+    print(f"Email: {evaluation_results['candidate_email']}")
+    print(f"Positions Evaluated: {len(evaluation_results['evaluations'])}")
+    print(f"Qualified For: {', '.join(evaluation_results['qualified_positions']) if evaluation_results['qualified_positions'] else 'None'}")
+    print(f"Invitations Sent: {evaluation_results['notifications_sent']}")
+
+    if evaluation_results['notifications_sent'] > 0:
+        print("🎉 SUCCESS: Candidate qualified and test invitations sent for at least one position!")
     else:
-        print("\n❌ CV processing failed.")
+        print("📝 INFO: Candidate did not qualify for any available positions or no invitations were sent.")
 
     db_connection.close()
     print("\n🏁 Process completed.")
