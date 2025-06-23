@@ -1,34 +1,73 @@
+#agent_Siya.py
+
 import requests
 import json
 from db_insert import insert_structured_cv_data
 import re
 
 
+
+
 def extract_json_block(text: str) -> dict:
     """
-    Extracts and cleans a JSON object from a noisy string.
-    Removes comments and other invalid JSON characters.
+    Enhanced JSON extraction with better error handling and multiple strategies
     """
-    try:
-        json_start = text.find('{')
-        json_end = text.rfind('}')
-        if json_start == -1 or json_end == -1:
-            raise ValueError("No JSON object found.")
-
-        json_str = text[json_start:json_end + 1]
-
-        # Remove comments like: // this is a comment
-        json_str = re.sub(r'//.*', '', json_str)
-
-        # Optional: remove emoji from keys or sanitize further
-        # You can add more clean-up logic if needed
-
-        return json.loads(json_str)
-
-    except Exception as e:
-        print(f"❌ JSON extraction failed: {e}")
-        return None
-
+    # Remove comments
+    text = re.sub(r'//.*', '', text)
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
+    
+    # Strategy 1: Look for complete JSON objects
+    json_patterns = [
+        r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}',  # Simple nested objects
+        r'\{.*?\}',  # Basic object pattern
+        r'```json\s*(\{.*?\})\s*```',  # Markdown code blocks
+        r'```\s*(\{.*?\})\s*```',  # Generic code blocks
+    ]
+    
+    for pattern in json_patterns:
+        json_blocks = re.findall(pattern, text, re.DOTALL)
+        
+        for block in json_blocks:
+            try:
+                # Clean up the block
+                block = block.strip()
+                parsed = json.loads(block)
+                
+                # Validate it has expected fields
+                if any(key in parsed for key in ['name', 'email', 'skills', 'experience']):
+                    print(f"✅ Successfully parsed JSON with {len(parsed)} fields")
+                    return parsed
+                    
+            except json.JSONDecodeError as e:
+                print(f"⚠️ JSON parse error: {e}")
+                continue
+            except Exception as e:
+                print(f"⚠️ Unexpected error parsing block: {e}")
+                continue
+    
+    # Strategy 2: Try to extract key-value pairs manually
+    print("🔄 Attempting manual key-value extraction...")
+    manual_data = {}
+    
+    # Look for common patterns
+    patterns = {
+        'name': r'"name"\s*:\s*"([^"]+)"',
+        'email': r'"email"\s*:\s*"([^"]+)"',
+        'phone': r'"phone"\s*:\s*"([^"]+)"',
+        'role': r'"role"\s*:\s*"([^"]+)"',
+        'summary': r'"summary"\s*:\s*"([^"]+)"',
+    }
+    
+    for key, pattern in patterns.items():
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            manual_data[key] = match.group(1)
+    
+    if manual_data:
+        print(f"📦 Extracted {len(manual_data)} fields manually")
+        return manual_data
+    
+    return None
 
 
 def query_ollama_stream(prompt, model="llama3", db_connection=None):
@@ -64,7 +103,20 @@ def query_ollama_stream(prompt, model="llama3", db_connection=None):
                 continue
 
     print("\n\n📦 Parsing Ollama output...\n")
+    
+    # DEBUG: Print the raw response
+    print("🔍 DEBUG - Raw Ollama Response:")
+    print("=" * 50)
+    print(full_response)
+    print("=" * 50)
+    
     json_data = extract_json_block(full_response)
+    
+    # DEBUG: Print extracted JSON
+    print("🔍 DEBUG - Extracted JSON:")
+    print("=" * 50)
+    print(json.dumps(json_data, indent=2) if json_data else "No JSON extracted")
+    print("=" * 50)
 
     if json_data:
         if db_connection:

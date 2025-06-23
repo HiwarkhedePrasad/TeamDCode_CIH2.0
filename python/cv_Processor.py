@@ -23,20 +23,66 @@ class CVProcessor:
         print("\n🤖 Sending to Ollama for structured CV extraction...\n")
 
         prompt = f"""
-Extract the following information in proper JSON format from this resume:
-- name, role, email, phone, location, github_url, linkedin_url, portfolio_url
-- summary of candidate (max 5 lines)
-- total_experience (in years, float), education_gap (true/false), work_gap (true/false)
-- education: list of institute, degree, start_date, end_date
-- experience: list of title, company, start_date, end_date, description
-- skills: list of technical skills
-- soft_skills: list of {{ "skill": "", "strength_level": "High/Medium/Low" }}
-- projects: title and description
-- employment_gaps (if any): gap_start, gap_end, gap_duration_in_months, reason
-- scoring: tech_score, communication_score, ai_fit_score, overall_score
+You must respond with ONLY valid JSON. No other text, no explanations, no markdown.
+
+Extract information from this resume and return it in this EXACT JSON format:
+
+{{
+  "name": "Full Name",
+  "role": "Job Title/Role",
+  "email": "email@domain.com",
+  "phone": "phone number",
+  "location": "city, country",
+  "github_url": "github link or null",
+  "linkedin_url": "linkedin link or null", 
+  "portfolio_url": "portfolio link or null",
+  "summary": "Brief professional summary",
+  "total_experience": 5.5,
+  "education_gap": false,
+  "work_gap": false,
+  "education": [
+    {{
+      "institute": "University Name",
+      "degree": "Degree Name",
+      "start_date": "YYYY-MM-DD",
+      "end_date": "YYYY-MM-DD"
+    }}
+  ],
+  "experience": [
+    {{
+      "title": "Job Title",
+      "company": "Company Name", 
+      "start_date": "YYYY-MM-DD",
+      "end_date": "YYYY-MM-DD",
+      "description": "Job description"
+    }}
+  ],
+  "skills": ["skill1", "skill2", "skill3"],
+  "soft_skills": [
+    {{
+      "skill": "Communication",
+      "strength_level": "High"
+    }}
+  ],
+  "projects": [
+    {{
+      "title": "Project Name",
+      "description": "Project description"
+    }}
+  ],
+  "employment_gaps": [],
+  "scoring": {{
+    "tech_score": 8.5,
+    "communication_score": 7.0,
+    "ai_fit_score": 8.0,
+    "overall_score": 7.8
+  }}
+}}
 
 Resume Content:
 {cv_content[:2000]}
+
+Respond with ONLY the JSON object, nothing else.
 """
         try:
             query_ollama_stream(prompt=prompt, model=self.model, db_connection=self.db_connection)
