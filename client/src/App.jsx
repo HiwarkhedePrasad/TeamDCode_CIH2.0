@@ -6,6 +6,10 @@ import Home from "./pages/home";
 import AssessmentPlatform from "./AssessmentTest/AssessmentPlatform";
 import Navbar from "./static/navbar";
 import "./App.css";
+import InterviewerInterface from "./InterviewAssessment/InterViewPlatform";
+import InterviewPlatform from "./InterviewAssessment/InterViewPlatform";
+import VapiInterviewAgent from "./InterviewAssessment/VapiInterviewAgent";
+import VapiWidget from "./InterviewAssessment/VapiInterviewAgent";
 
 const App = () => {
   return (
@@ -20,6 +24,9 @@ const App = () => {
           path="/assessment/test/:assesId"
           element={<AssessmentPlatform />}
         />
+        <Route path="/interview/:id" element={<InterviewPlatform />} />
+        <Route path="/interview/vapi/:id" element={<VapiWidget />} />
+        <Route path="/interviewer" element={<InterviewerInterface />} />
       </Routes>
     </Router>
   );

@@ -1,36 +1,31 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const InterviewPlatform = () => {
-  const { linkId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const validateLink = async () => {
-      try {
-        const res = await fetch(`/api/interview/validate/${linkId}`);
-        const data = await res.json();
-
-        if (data.valid) {
-          window.open(`/interviewer?linkId=${linkId}`, "_blank");
-          window.open(`/ai-agent?linkId=${linkId}`, "_blank");
-        } else {
-          alert("Invalid Interview Link");
-          navigate("/");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Server error");
-        navigate("/");
-      }
-    };
-
-    validateLink();
-  }, [linkId, navigate]);
+  //   useEffect(() => {
+  //     axios
+  //       .get(`/api/validate-link/${id}`)
+  //       .then((res) => {
+  //         if (res.data.valid) {
+  //           window.open(`/interview/vapi/${id}`, "_blank");
+  //         } else {
+  //           alert("Invalid interview link.");
+  //           navigate("/");
+  //         }
+  //       })
+  //       .catch(() => {
+  //         alert("Error validating interview link.");
+  //         navigate("/");
+  //       });
+  //   }, [id]);
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <h2 className="text-2xl font-bold">Validating Interview Link...</h2>
+    <div className="min-h-screen flex items-center justify-center">
+      <h1 className="text-2xl font-bold text-gray-700">Loading Interview...</h1>
     </div>
   );
 };
