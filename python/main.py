@@ -1,4 +1,4 @@
-# Updated main.py - Integrated with skill matching and email notifications
+
 
 import mysql.connector
 from config import DatabaseConfig, OllamaConfig
@@ -27,7 +27,7 @@ def setup_job_requirements():
             ],
             preferred_skills=["TypeScript", "Next.js", "Docker", "AWS"],
             min_experience=2.0,
-            test_link="https://your-testing-platform.com/fullstack-test/12345",
+            test_link="https://autoscreen.ai/assessment/:assessmentId",
             department="Engineering"
         ),
         
