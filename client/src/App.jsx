@@ -20,10 +20,7 @@ const App = () => {
         {/* <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} /> */}
-        <Route
-          path="/assessment/test/:assesId"
-          element={<AssessmentPlatform />}
-        />
+        <Route path="/assessment/:assesId" element={<AssessmentPlatform />} />
         <Route path="/interview/:id" element={<InterviewPlatform />} />
         <Route path="/interview/vapi/:id" element={<VapiWidget />} />
         <Route path="/interviewer" element={<InterviewerInterface />} />
