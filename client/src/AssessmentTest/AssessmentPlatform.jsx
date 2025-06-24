@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import LoginComponent from "./LoginComponent";
 import DashboardComponent from "./DashboardComponent";
 import DisqualifiedComponent from "./DisqualifiedComponent.js";
 
 const AssessmentPlatform = () => {
+  // Route & navigation
+  const { assesId } = useParams(); // from URL /assessment/test/:assesId
+  const navigate = useNavigate();
+
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -14,7 +19,7 @@ const AssessmentPlatform = () => {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
+  const [timeLeft, setTimeLeft] = useState(3600); // 1 hour
 
   // Proctoring state
   const [isDisqualified, setIsDisqualified] = useState(false);
@@ -27,7 +32,7 @@ const AssessmentPlatform = () => {
 
   const testContainerRef = useRef(null);
 
-  // Sample questions - In production, these would come from Gemini AI API
+  // Sample questions (would come from Gemini/DB in production)
   const sampleQuestions = [
     {
       id: 1,
@@ -63,7 +68,30 @@ const AssessmentPlatform = () => {
     },
   ];
 
-  // Authentication handlers
+  // Validate assessment link (runs once)
+  useEffect(() => {
+    const validateAssessmentLink = async () => {
+      try {
+        const response = await fetch(`/api/assessment/${assesId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Valid assessment link:", data);
+          // You can store assessment data here if needed
+        } else {
+          alert("Invalid or expired assessment link.");
+          navigate("/disqualified");
+        }
+      } catch (error) {
+        console.error("Error validating assessment link:", error);
+        alert("Error occurred. Redirecting.");
+        navigate("/disqualified");
+      }
+    };
+
+    validateAssessmentLink();
+  }, [assesId, navigate]);
+
+  // Auth handlers
   const handleLogin = (userData) => {
     setCurrentUser(userData);
     setIsLoggedIn(true);
@@ -81,19 +109,16 @@ const AssessmentPlatform = () => {
     exitFullscreen();
   };
 
-  // Test management
+  // Test logic
   const startTest = async () => {
     setIsLoading(true);
-
     try {
-      // Simulate API call to fetch questions from Gemini AI
       await new Promise((resolve) => setTimeout(resolve, 2000));
       setQuestions(sampleQuestions);
       setIsTestStarted(true);
       enterFullscreen();
     } catch (error) {
-      console.error("Failed to load questions:", error);
-      alert("Failed to load questions. Please try again.");
+      alert("Failed to start test.");
     } finally {
       setIsLoading(false);
     }
@@ -143,13 +168,12 @@ const AssessmentPlatform = () => {
       ) {
         score++;
       }
-      // For coding questions, you'd need to implement code evaluation
-      // This would typically involve running the code against test cases
+      // No evaluation for coding in this mock
     });
     return score;
   };
 
-  // Proctoring functions
+  // Proctoring
   const enterFullscreen = () => {
     if (testContainerRef.current?.requestFullscreen) {
       testContainerRef.current.requestFullscreen();
@@ -180,7 +204,6 @@ const AssessmentPlatform = () => {
     }
   };
 
-  // Utility functions
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -190,8 +213,6 @@ const AssessmentPlatform = () => {
   };
 
   // Effects
-
-  // Timer effect
   useEffect(() => {
     if (isTestStarted && timeLeft > 0 && !isDisqualified) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -201,7 +222,6 @@ const AssessmentPlatform = () => {
     }
   }, [timeLeft, isTestStarted, isDisqualified]);
 
-  // Proctoring event listeners
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
@@ -224,14 +244,13 @@ const AssessmentPlatform = () => {
     };
   }, [isTestStarted, tabSwitchCount, isDisqualified]);
 
-  // Update code editor when question changes
   useEffect(() => {
     if (questions[currentQuestion]?.type === "coding") {
       updateCodeEditor(currentQuestion);
     }
   }, [currentQuestion, questions]);
 
-  // Render components based on state
+  // Rendering logic
   if (isDisqualified) {
     return <DisqualifiedComponent onReturnToLogin={handleLogout} />;
   }

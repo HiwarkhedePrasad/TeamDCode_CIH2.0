@@ -29,7 +29,7 @@ def setup_job_requirements():
             required_skills=["JavaScript", "React", "Node.js", "MongoDB", "Express.js", "HTML", "CSS", "REST API", "Git"],
             preferred_skills=["TypeScript", "Next.js", "Docker", "AWS"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Engineering"
         ),
         JobRequirement(
@@ -37,7 +37,7 @@ def setup_job_requirements():
             required_skills=["Figma", "Adobe XD", "Wireframing", "Prototyping", "User Research", "Responsive Design","UI/UX"],
             preferred_skills=["Illustrator", "Photoshop", "Accessibility", "Design Systems"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Design"
         ),
         JobRequirement(
@@ -45,7 +45,7 @@ def setup_job_requirements():
             required_skills=["Linux", "CI/CD", "Docker", "Kubernetes", "Git", "Bash"],
             preferred_skills=["Terraform", "AWS", "Monitoring", "Ansible"],
             min_experience=1,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Infrastructure"
         ),
         JobRequirement(
@@ -53,7 +53,7 @@ def setup_job_requirements():
             required_skills=["Kotlin", "Java", "Android SDK", "REST APIs", "UI/UX Design"],
             preferred_skills=["Jetpack Compose", "Firebase", "Unit Testing"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Mobile Development"
         ),
         JobRequirement(
@@ -61,7 +61,7 @@ def setup_job_requirements():
             required_skills=["Swift", "Xcode", "iOS SDK", "UIKit", "REST APIs"],
             preferred_skills=["SwiftUI", "Core Data", "Firebase"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Mobile Development"
         ),
         JobRequirement(
@@ -69,7 +69,7 @@ def setup_job_requirements():
             required_skills=["AWS", "GCP", "Azure", "Cloud Networking", "Security", "Terraform"],
             preferred_skills=["DevOps", "Monitoring Tools", "Serverless", "Cost Optimization"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Infrastructure"
         ),
         JobRequirement(
@@ -77,7 +77,7 @@ def setup_job_requirements():
             required_skills=["Manual Testing", "Automation", "Selenium", "Test Cases", "Bug Tracking", "API Testing"],
             preferred_skills=["JMeter", "Cypress", "CI/CD Integration", "Performance Testing"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Quality Assurance"
         ),
         JobRequirement(
@@ -85,7 +85,7 @@ def setup_job_requirements():
             required_skills=["Product Roadmap", "Agile", "Scrum", "User Stories", "Market Research", "Wireframing"],
             preferred_skills=["SQL", "Analytics", "A/B Testing", "Figma"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Product"
         ),
         JobRequirement(
@@ -93,7 +93,7 @@ def setup_job_requirements():
             required_skills=["Network Security", "Vulnerability Assessment", "SIEM", "Firewalls", "Incident Response"],
             preferred_skills=["Ethical Hacking", "Penetration Testing", "SOC", "Compliance Standards"],
             min_experience=1,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Security"
         ),
         JobRequirement(
@@ -101,7 +101,7 @@ def setup_job_requirements():
             required_skills=["Requirement Gathering", "Stakeholder Communication", "Data Analysis", "SQL", "Documentation"],
             preferred_skills=["Power BI", "Tableau", "UML", "JIRA"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Business"
         ),
         JobRequirement(
@@ -109,7 +109,7 @@ def setup_job_requirements():
             required_skills=["Python", "SQL", "Pandas", "Excel", "Data Visualization", "Statistics"],
             preferred_skills=["Power BI", "Tableau", "Machine Learning", "BigQuery"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Data"
         ),
         JobRequirement(
@@ -117,7 +117,7 @@ def setup_job_requirements():
             required_skills=["JavaScript", "React", "HTML", "CSS", "Responsive Design", "Git", "Web APIs"],
             preferred_skills=["TypeScript", "Redux", "Webpack", "SASS"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Engineering"
         ),
         JobRequirement(
@@ -125,7 +125,7 @@ def setup_job_requirements():
             required_skills=["Node.js", "Express.js", "MongoDB", "REST API", "Database Design", "Git", "Authentication"],
             preferred_skills=["Python", "Docker", "Redis", "Microservices"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Engineering"
         ),
         JobRequirement(
@@ -133,7 +133,7 @@ def setup_job_requirements():
             required_skills=["Python", "Machine Learning", "Data Science", "TensorFlow", "Pandas", "NumPy", "Statistics"],
             preferred_skills=["PyTorch", "Deep Learning", "NLP", "Computer Vision"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
+            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId", # Placeholder for dynamic ID
             department="AI Research"
         )
     ]
@@ -168,17 +168,26 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
     cursor = db_connection.cursor()
     try:
         # Create evaluation_logs table if it doesn't exist
+        # Ensure qualified_positions is TEXT
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS evaluation_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 candidate_id INT,
                 total_positions_checked INT,
-                qualified_positions TEXT,
+                qualified_positions TEXT, -- Ensure this is TEXT
                 notifications_sent INT,
                 evaluation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (candidate_id) REFERENCES candidates(id)
             )
         """)
+        
+        # Prepare qualified_positions string
+        qualified_pos_str = ', '.join(evaluation_results['qualified_positions'])
+        # If the list of qualified positions is empty, make sure to insert NULL into the TEXT column
+        # This is a defensive measure in case MySQL is misinterpreting '' as an integer context for some reason
+        if not qualified_pos_str:
+            qualified_pos_str = None # MySQL will treat None as NULL for TEXT columns
+
         # Insert evaluation results
         cursor.execute("""
             INSERT INTO evaluation_logs
@@ -187,7 +196,7 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
         """, (
             candidate_id,
             len(evaluation_results['evaluations']),
-            ', '.join(evaluation_results['qualified_positions']),
+            qualified_pos_str, # Use the prepared string
             evaluation_results['notifications_sent']
         ))
         db_connection.commit()

@@ -1,179 +1,209 @@
-import re
-import os
-import ssl
 import smtplib
-from datetime import datetime
-from typing import List, Dict, Tuple
-from dataclasses import dataclass
-from enum import Enum
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import os # Make sure os is imported here for environment variables
+import re # Import re for regular expressions
 
-
-class MatchLevel(Enum):
-    EXACT = "exact"
-    PARTIAL = "partial"
-    RELATED = "related"
-
-@dataclass
 class JobRequirement:
-    title: str
-    required_skills: List[str]
-    preferred_skills: List[str] = None
-    min_experience: float = 0
-    test_link: str = ""
-    department: str = ""
+    """Represents the requirements for a specific job position."""
+    def __init__(self, title, required_skills, preferred_skills, min_experience, test_link, department):
+        self.title = title
+        self.required_skills = [s.lower() for s in required_skills] # Store in lowercase for case-insensitive matching
+        self.preferred_skills = [s.lower() for s in preferred_skills] # Store in lowercase
+        self.min_experience = min_experience
+        self.test_link = test_link
+        self.department = department
 
-@dataclass
+    def __repr__(self):
+        return (f"JobRequirement(title='{self.title}', required_skills={self.required_skills}, "
+                f"preferred_skills={self.preferred_skills}, min_experience={self.min_experience}, "
+                f"test_link='{self.test_link}', department='{self.department}')")
+
 class SkillMatch:
-    skill: str
-    candidate_skill: str
-    match_level: MatchLevel
-    confidence: float
+    """Represents a match between a candidate's skill and a job's required skill."""
+    def __init__(self, candidate_skill, required_skill, match_type="exact"):
+        self.candidate_skill = candidate_skill
+        self.required_skill = required_skill
+        self.match_type = match_type # e.g., "exact", "partial", "alias"
+
+    def __repr__(self):
+        return (f"SkillMatch(candidate_skill='{self.candidate_skill}', "
+                f"required_skill='{self.required_skill}', match_type='{self.match_type}')")
 
 class SkillMatcher:
+    """Handles skill matching between candidate CVs and job requirements."""
     def __init__(self):
-        self.skill_mappings = {
-            "javascript": ["js", "node.js", "nodejs", "react", "angular", "vue"],
-            "python": ["django", "flask", "fastapi", "pandas", "numpy"],
-            "java": ["spring", "hibernate", "maven", "gradle"],
-            "react": ["reactjs", "react.js", "next.js", "nextjs"],
-            "node": ["nodejs", "node.js", "express", "express.js"],
-            "database": ["mysql", "postgresql", "mongodb", "sql", "nosql"],
-            "cloud": ["aws", "azure", "gcp", "docker", "kubernetes"],
-            "ai": ["machine learning", "ml", "deep learning", "artificial intelligence"],
-            "frontend": ["html", "css", "javascript", "react", "angular", "vue"],
-            "backend": ["node", "python", "java", "php", "api", "rest"],
-            "fullstack": ["mern", "mean", "full-stack", "full stack"]
+        # A simple alias mapping for common skill variations
+        self.skill_aliases = {
+            "js": "javascript",
+            "reactjs": "react",
+            "nodejs": "node.js",
+            "expressjs": "express.js",
+            "mongodb": "mongodb",
+            "figma": "figma",
+            "adobexd": "adobe xd",
+            "linux": "linux",
+            "k8s": "kubernetes",
+            "gcp": "google cloud platform",
+            "azure": "microsoft azure",
+            "aws": "amazon web services",
+            "ai": "artificial intelligence",
+            "ml": "machine learning",
+            "data sci": "data science",
+            "ui/ux": "ui/ux design",
+            "qa": "quality assurance",
+            "ci/cd": "continuous integration/continuous deployment",
+            "rdbms": "relational database management system",
+            "nosql": "nosql database",
+            "agile": "agile methodology",
+            "scrum": "scrum framework",
+            "rest": "rest api",
+            "api": "api",
+            "git": "git",
+            "html": "html",
+            "css": "css",
+            "python": "python",
+            "java": "java",
+            "kotlin": "kotlin",
+            "swift": "swift",
+            "xcode": "xcode",
+            "sql": "sql",
+            "excel": "excel",
+            "pandas": "pandas",
+            "numpy": "numpy",
+            "tensorflow": "tensorflow",
+            "pytorch": "pytorch",
+            "nlp": "natural language processing",
+            "cv": "computer vision", # Assuming CV means Computer Vision in this context
+            "powerbi": "power bi",
+            "tableau": "tableau",
+            "uml": "unified modeling language",
+            "jira": "jira",
+            "selenium": "selenium",
+            "cypress": "cypress",
+            "jmeter": "jmeter",
+            "ansible": "ansible",
+            "terraform": "terraform",
+            "docker": "docker",
+            "kubernetes": "kubernetes",
+            "bash": "bash",
+            "shell": "bash" # Alias for bash
         }
 
-    def normalize_skill(self, skill: str) -> str:
-        skill = skill.lower().strip()
-        skill = re.sub(r'[^\w\s+#.-]', '', skill)
-        skill = re.sub(r'\s+', ' ', skill)
-        return skill
+    def _normalize_skill(self, skill):
+        """Normalizes a skill string (lowercase, remove punctuation, apply aliases)."""
+        normalized = re.sub(r'[^\w\s]', '', skill).lower().strip()
+        return self.skill_aliases.get(normalized, normalized)
 
-    def find_skill_matches(self, candidate_skills: List[str], required_skills: List[str]) -> List[SkillMatch]:
+    def find_skill_matches(self, candidate_skills, required_skills):
+        """
+        Finds matches between candidate's skills and a list of required skills.
+        Normalization and alias matching are applied.
+        """
         matches = []
-        normalized_candidate = [self.normalize_skill(skill) for skill in candidate_skills]
-        normalized_required = [self.normalize_skill(skill) for skill in required_skills]
+        normalized_candidate_skills = [self._normalize_skill(s) for s in candidate_skills]
+        normalized_required_skills = [self._normalize_skill(s) for s in required_skills]
 
-        for req_skill, raw_req in zip(normalized_required, required_skills):
-            best_match = None
-            best_confidence = 0
-
-            # Exact match
-            for i, cand_skill in enumerate(normalized_candidate):
-                if req_skill == cand_skill:
-                    matches.append(SkillMatch(
-                        skill=raw_req,
-                        candidate_skill=candidate_skills[i],
-                        match_level=MatchLevel.EXACT,
-                        confidence=1.0
-                    ))
-                    best_match = True
-                    break
-
-            if best_match:
-                continue
-
-            # Partial/related match
-            for i, cand_skill in enumerate(normalized_candidate):
-                confidence = 0.0
-
-                if req_skill in cand_skill or cand_skill in req_skill:
-                    confidence = 0.8
-
-                for base_skill, related in self.skill_mappings.items():
-                    if req_skill == base_skill and any(rel in cand_skill for rel in related):
-                        confidence = 0.7
-                    elif cand_skill == base_skill and any(rel in req_skill for rel in related):
-                        confidence = 0.7
-
-                if confidence > best_confidence:
-                    best_confidence = confidence
-                    best_match = SkillMatch(
-                        skill=raw_req,
-                        candidate_skill=candidate_skills[i],
-                        match_level=MatchLevel.PARTIAL if confidence >= 0.7 else MatchLevel.RELATED,
-                        confidence=confidence
-                    )
-
-            if best_match and not isinstance(best_match, bool):
-                matches.append(best_match)
+        for req_skill_original, req_skill_normalized in zip(required_skills, normalized_required_skills):
+            for cand_skill_original, cand_skill_normalized in zip(candidate_skills, normalized_candidate_skills):
+                if req_skill_normalized == cand_skill_normalized:
+                    matches.append(SkillMatch(cand_skill_original, req_skill_original, "exact"))
+                    break # Move to the next required skill once a match is found
 
         return matches
 
-    def calculate_match_score(self, matches: List[SkillMatch], total_required: int) -> Tuple[float, Dict]:
-        if total_required == 0:
-            return 0.0, {}
+    def calculate_match_score(self, matches, total_required_skills):
+        """
+        Calculates a match score based on the number of matched skills.
+        Returns the score and a detailed string.
+        """
+        if total_required_skills == 0:
+            return 100.0, "No required skills specified, assuming 100% match."
 
-        total_score = sum(match.confidence for match in matches)
-        match_percentage = (len(matches) / total_required) * 100
-        weighted_score = (total_score / total_required) * 100
+        matched_count = len(matches)
+        score = (matched_count / total_required_skills) * 100.0
 
-        details = {
-            "total_required_skills": total_required,
-            "matched_skills": len(matches),
-            "match_percentage": round(match_percentage, 2),
-            "weighted_score": round(weighted_score, 2),
-            "exact_matches": len([m for m in matches if m.match_level == MatchLevel.EXACT]),
-            "partial_matches": len([m for m in matches if m.match_level == MatchLevel.PARTIAL]),
-            "related_matches": len([m for m in matches if m.match_level == MatchLevel.RELATED])
-        }
+        if not matches:
+            match_details = "No required skills matched."
+        else:
+            matched_skill_names = [m.required_skill for m in matches]
+            match_details = f"Matched {matched_count} of {total_required_skills} required skills: {', '.join(matched_skill_names)}."
 
-        return weighted_score, details
+        return score, match_details
 
 
 class EmailSender:
-    def __init__(self, smtp_server: str, smtp_port: int, email: str, password: str):
+    def __init__(self, email_user, email_password, smtp_server="smtp.gmail.com", smtp_port=587):
+        self.email = email_user
+        self.password = email_password
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
-        self.email = email
-        self.password = password
 
     @classmethod
     def from_env(cls):
-        smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        smtp_port = int(os.getenv("SMTP_PORT", 587))
+        """Initializes EmailSender instance using environment variables."""
         email_user = os.getenv("EMAIL_USER")
         email_password = os.getenv("EMAIL_PASSWORD")
-
         if not email_user or not email_password:
-            print("⚠️ Warning: EMAIL_USER or EMAIL_PASSWORD environment variables are not set for EmailSender.")
-            return None
+            # Raise an error if credentials are not set
+            raise ValueError("EMAIL_USER and EMAIL_PASSWORD environment variables must be set for EmailSender.")
+        return cls(email_user, email_password)
 
-        return cls(
-            smtp_server=smtp_server,
-            smtp_port=smtp_port,
-            email=email_user,
-            password=email_password
-        )
+    def send_test_invitation(self, candidate_data, job_requirement, match_details, assessment_uuid):
+        """
+        Sends a test invitation email to the candidate with a unique assessment link.
+        """
+        recipient_email = candidate_data.get("email")
+        candidate_name = candidate_data.get("name", "Candidate")
+        job_title = job_requirement.title
+        original_test_link = job_requirement.test_link
 
-    def send_test_invitation(self, candidate_data: dict, job_requirement: JobRequirement, 
-                              match_details: dict) -> bool:
+        # Construct the unique test link using the generated UUID
+        if ":assessmentId" in original_test_link:
+            unique_test_link = original_test_link.replace(":assessmentId", assessment_uuid)
+        else:
+            # Fallback if the placeholder isn't found, though it should be in the JobRequirement
+            unique_test_link = f"{original_test_link}/{assessment_uuid}"
+
+        subject = f"Your Technical Assessment for {job_title} at AutoScreen.ai"
+
+        body = f"""
+        Dear {candidate_name},
+
+        Thank you for your interest in the {job_title} position at AutoScreen.ai.
+
+        Based on your qualifications, we would like to invite you to complete a technical assessment. This assessment will help us evaluate your skills relevant to the role.
+
+        Please click on the following unique link to start your assessment:
+        {unique_test_link}
+
+        Please note: This link is unique to you and your assessment for this specific position. Do not share it.
+
+        We wish you the best of luck with the assessment!
+
+        Best regards,
+        The AutoScreen.ai Hiring Team
+        """
+
+        msg = MIMEMultipart()
+        msg['From'] = self.email
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
         try:
-            message = MIMEMultipart("alternative")
-            message["Subject"] = f"Technical Assessment Invitation - {job_requirement.title}"
-            message["From"] = self.email
-            message["To"] = candidate_data.get("email")
-
-            html_content = self.create_email_template(candidate_data, job_requirement, match_details)
-            html_part = MIMEText(html_content, "html")
-            message.attach(html_part)
-
-            context = ssl.create_default_context()
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls(context=context)
-                server.login(self.email, self.password)
-                server.sendmail(self.email, candidate_data.get("email"), message.as_string())
-
-            print(f"✅ Test invitation sent to {candidate_data.get('name')} ({candidate_data.get('email')})")
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls() # Enable Transport Layer Security
+            server.login(self.email, self.password)
+            text = msg.as_string()
+            server.sendmail(self.email, recipient_email, text)
+            server.quit()
+            print(f"✉️ Test invitation sent to {recipient_email} for {job_title} with ID: {assessment_uuid}")
             return True
-
         except Exception as e:
-            print(f"❌ Failed to send email to {candidate_data.get('email')}: {e}")
+            print(f"❌ Failed to send email to {recipient_email}: {e}")
             return False
+
 
     def create_email_template(self, candidate_data: dict, job_requirement: JobRequirement, 
                               match_details: dict) -> str:
