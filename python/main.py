@@ -47,7 +47,7 @@ def setup_job_requirements():
             required_skills=["JavaScript", "React", "Node.js", "MongoDB", "Express.js", "HTML", "CSS", "REST API", "Git"],
             preferred_skills=["TypeScript", "Next.js", "Docker", "AWS"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Engineering"
         ),
         JobRequirement(
@@ -55,7 +55,7 @@ def setup_job_requirements():
             required_skills=["Figma", "Adobe XD", "Wireframing", "Prototyping", "User Research", "Responsive Design","UI/UX"],
             preferred_skills=["Illustrator", "Photoshop", "Accessibility", "Design Systems"],
             min_experience=0.5,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Design"
         ),
         JobRequirement(
@@ -63,7 +63,7 @@ def setup_job_requirements():
             required_skills=["Linux", "CI/CD", "Docker", "Kubernetes", "Git", "Bash"],
             preferred_skills=["Terraform", "AWS", "Monitoring", "Ansible"],
             min_experience=1,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Infrastructure"
         ),
         JobRequirement(
@@ -71,7 +71,7 @@ def setup_job_requirements():
             required_skills=["Kotlin", "Java", "Android SDK", "REST APIs", "UI/UX Design"],
             preferred_skills=["Jetpack Compose", "Firebase", "Unit Testing"],
             min_experience=0.5,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Mobile Development"
         ),
         JobRequirement(
@@ -79,7 +79,7 @@ def setup_job_requirements():
             required_skills=["Swift", "Xcode", "iOS SDK", "UIKit", "REST APIs"],
             preferred_skills=["SwiftUI", "Core Data", "Firebase"],
             min_experience=0.5,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Mobile Development"
         ),
         JobRequirement(
@@ -87,7 +87,7 @@ def setup_job_requirements():
             required_skills=["AWS", "GCP", "Azure", "Cloud Networking", "Security", "Terraform"],
             preferred_skills=["DevOps", "Monitoring Tools", "Serverless", "Cost Optimization"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Infrastructure"
         ),
         JobRequirement(
@@ -95,7 +95,7 @@ def setup_job_requirements():
             required_skills=["Manual Testing", "Automation", "Selenium", "Test Cases", "Bug Tracking", "API Testing"],
             preferred_skills=["JMeter", "Cypress", "CI/CD Integration", "Performance Testing"],
             min_experience=0.5,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Quality Assurance"
         ),
         JobRequirement(
@@ -103,7 +103,7 @@ def setup_job_requirements():
             required_skills=["Product Roadmap", "Agile", "Scrum", "User Stories", "Market Research", "Wireframing"],
             preferred_skills=["SQL", "Analytics", "A/B Testing", "Figma"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Product"
         ),
         JobRequirement(
@@ -111,7 +111,7 @@ def setup_job_requirements():
             required_skills=["Network Security", "Vulnerability Assessment", "SIEM", "Firewalls", "Incident Response"],
             preferred_skills=["Ethical Hacking", "Penetration Testing", "SOC", "Compliance Standards"],
             min_experience=1,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Security"
         ),
         JobRequirement(
@@ -119,7 +119,7 @@ def setup_job_requirements():
             required_skills=["Requirement Gathering", "Stakeholder Communication", "Data Analysis", "SQL", "Documentation"],
             preferred_skills=["Power BI", "Tableau", "UML", "JIRA"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Business"
         ),
         JobRequirement(
@@ -127,7 +127,7 @@ def setup_job_requirements():
             required_skills=["Python", "SQL", "Pandas", "Excel", "Data Visualization", "Statistics"],
             preferred_skills=["Power BI", "Tableau", "Machine Learning", "BigQuery"],
             min_experience=0.5,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Data"
         ),
         JobRequirement(
@@ -135,7 +135,7 @@ def setup_job_requirements():
             required_skills=["JavaScript", "React", "HTML", "CSS", "Responsive Design", "Git", "Web APIs"],
             preferred_skills=["TypeScript", "Redux", "Webpack", "SASS"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Engineering"
         ),
         JobRequirement(
@@ -143,7 +143,7 @@ def setup_job_requirements():
             required_skills=["Node.js", "Express.js", "MongoDB", "REST API", "Database Design", "Git", "Authentication"],
             preferred_skills=["Python", "Docker", "Redis", "Microservices"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="Engineering"
         ),
         JobRequirement(
@@ -151,7 +151,7 @@ def setup_job_requirements():
             required_skills=["Python", "Machine Learning", "Data Science", "TensorFlow", "Pandas", "NumPy", "Statistics"],
             preferred_skills=["PyTorch", "Deep Learning", "NLP", "Computer Vision"],
             min_experience=0,
-            test_link="https://team-d-code-cih-2-0.vercel.app/assessment/:assessmentId",
+            test_link="localhost:4000/assessment/:assessmentId",
             department="AI Research"
         )
     ]

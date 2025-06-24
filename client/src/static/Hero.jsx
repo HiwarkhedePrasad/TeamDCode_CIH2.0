@@ -8,7 +8,7 @@ import {
   ArrowDown,
   CheckCircle,
 } from "lucide-react";
-
+import { Link } from "react-router-dom";
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -139,12 +139,14 @@ export default function Hero() {
                 : "opacity-0 translate-y-8"
             }`}
           >
-            <button className="group relative px-8 py-4 bg-[#A0C878] text-white font-semibold rounded-xl hover:bg-[#8bb764] transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#A0C878]/25">
-              <div className="flex items-center gap-2">
-                <span>See it in action</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-              </div>
-            </button>
+            <Link to="/resume">
+              <button className="group relative px-8 py-4 bg-[#A0C878] text-white font-semibold rounded-xl hover:bg-[#8bb764] transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#A0C878]/25">
+                <div className="flex items-center gap-2">
+                  <span>See it in action</span>
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </div>
+              </button>
+            </Link>
 
             <button className="group flex items-center gap-3 px-8 py-4 bg-white border-2 border-[#DDEB9D] text-gray-700 font-semibold rounded-xl hover:border-[#A0C878] hover:bg-[#FFFDF6] transition-all duration-300 hover:scale-105">
               <Play className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />

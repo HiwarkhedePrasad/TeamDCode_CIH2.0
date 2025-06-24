@@ -1,5 +1,5 @@
 export default function Navbar() {
-  const navItems = ["Product", "Solutions", "Resources", "Pricing"];
+  const navItems = ["Resume"];
 
   return (
     <nav className="bg-[#FFFDF6] shadow-sm border-b border-[#FAF6E9] px-6 py-4 sticky top-0 z-50">
@@ -17,7 +17,7 @@ export default function Navbar() {
           {navItems.map((item) => (
             <a
               key={item}
-              href="#"
+              href="/resume"
               className="text-gray-700 hover:text-[#A0C878] font-medium transition-colors duration-200"
             >
               {item}
