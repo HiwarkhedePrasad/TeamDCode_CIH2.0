@@ -72,7 +72,9 @@ const AssessmentPlatform = () => {
   useEffect(() => {
     const validateAssessmentLink = async () => {
       try {
-        const response = await fetch(`/api/assessment/${assesId}`);
+        const response = await fetch(
+          `https://teamdcode-cih-2-0.onrender.com/api/assessment/${assesId}`
+        );
         if (response.ok) {
           const data = await response.json();
           console.log("Valid assessment link:", data);
