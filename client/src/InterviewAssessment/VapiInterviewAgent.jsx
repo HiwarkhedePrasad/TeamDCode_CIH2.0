@@ -1,39 +1,38 @@
+// client/src/VapiWidget.jsx
 import React, { useState, useEffect } from "react";
 import Vapi from "@vapi-ai/web";
 
 const VapiWidget = () => {
-  // Ensure your .env.local or .env file has VITE_VAPI_API_KEY=YOUR_PUBLIC_VAPI_CLIENT_KEY
   const apiKey = import.meta.env.VITE_VAPI_API_KEY;
-  // Make sure this is YOUR actual Assistant ID from Vapi Dashboard
-  const assistantId = "9cde237e-8b46-4c22-89d0-1897ac74c208";
-
-  // Basic configuration for Vapi instance
-  const config = {
-    userId: "candidate-xyz", // This is optional, but good for tracking
-  };
+  const assistantId = "9cde237e-8b46-4c22-89d0-1897ac74c208"; // Your actual assistant ID
 
   const [vapi, setVapi] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState([]);
-  const [error, setError] = useState(null); // To display errors
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!apiKey) {
-      console.error("❌ VITE_VAPI_API_KEY is missing from .env");
-      setError("VAPI_API_KEY is missing. Check your .env file.");
+      console.error("❌ VITE_VAPI_API_KEY is missing from .env.local");
+      setError("VAPI_API_KEY is missing. Check your .env.local file.");
       return;
     }
 
-    console.log("✅ Initializing Vapi with API key (client-side):", apiKey);
-    const vapiInstance = new Vapi(apiKey, config);
+    console.log("✅ Initializing Vapi with client-side API key:", apiKey);
+
+    // *** CRITICAL CHANGE HERE: Specify your backend proxy URL (port 4000) ***
+    const vapiInstance = new Vapi(apiKey, {
+      apiUrl: "http://localhost:4000", // <--- THIS MUST BE YOUR BACKEND URL
+      userId: "candidate-xyz",
+    });
 
     setVapi(vapiInstance);
 
     vapiInstance.on("call-start", () => {
       console.log("✅ Call started");
       setIsConnected(true);
-      setError(null); // Clear any previous errors on successful start
+      setError(null);
     });
 
     vapiInstance.on("call-end", () => {
@@ -62,11 +61,11 @@ const VapiWidget = () => {
           },
         ]);
       }
+      console.log("Vapi Message:", message);
     });
 
     vapiInstance.on("error", (err) => {
       console.error("❌ Vapi error:", err);
-      // More specific error handling based on the error object
       if (err instanceof Error) {
         setError(`Vapi SDK Error: ${err.message}`);
       } else if (typeof err === "object" && err !== null && err.error) {
@@ -78,12 +77,11 @@ const VapiWidget = () => {
       }
     });
 
-    // Cleanup function to stop Vapi when component unmounts
     return () => {
       console.log("Component unmounting, stopping Vapi.");
       vapiInstance?.stop();
     };
-  }, [apiKey]); // Dependency array, re-run if apiKey changes
+  }, [apiKey]);
 
   const startCall = () => {
     if (!vapi) {
@@ -96,22 +94,7 @@ const VapiWidget = () => {
       return;
     }
 
-    // THIS IS THE CRITICAL LOG TO DEBUG THE [object%20Object] issue
-    console.log(
-      "📞 Attempting to start call with assistantId:",
-      assistantId,
-      "Type:",
-      typeof assistantId
-    );
-
-    // Vapi.start() expects a string assistant ID or a Call object (for resuming).
-    // Ensure assistantId is always a string here.
-    if (typeof assistantId !== "string") {
-      console.error("Assistant ID is not a string!", assistantId);
-      setError("Configuration Error: Assistant ID must be a string.");
-      return;
-    }
-
+    console.log("📞 Attempting to start call with assistantId:", assistantId);
     vapi.start(assistantId);
   };
 
@@ -150,7 +133,7 @@ const VapiWidget = () => {
       {!isConnected ? (
         <button
           onClick={startCall}
-          disabled={!vapi} // Disable button until Vapi is initialized
+          disabled={!vapi}
           style={{
             background: "#12A594",
             color: "#fff",
@@ -162,7 +145,7 @@ const VapiWidget = () => {
             cursor: !vapi ? "not-allowed" : "pointer",
             boxShadow: "0 4px 12px rgba(18, 165, 148, 0.3)",
             transition: "all 0.3s ease",
-            opacity: !vapi ? 0.6 : 1, // Dim if disabled
+            opacity: !vapi ? 0.6 : 1,
           }}
           onMouseOver={(e) => {
             if (!vapi) return;
