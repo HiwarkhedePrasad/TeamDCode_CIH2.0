@@ -3,7 +3,7 @@ const mysql = require("mysql2");
 const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -28,7 +28,10 @@ db.connect((err) => {
 app.get("/api/assessment/:linkId", (req, res) => {
   const linkId = req.params.linkId;
 
-  const query = "SELECT * FROM assessment WHERE assessment_uuid = ?";
+  // Query to select all columns from the 'assessment' table
+  // since candidate_id, job_title, and candidate_email are already in it.
+  const query = "SELECT * FROM assessments WHERE assessment_uuid = ?";
+
   db.query(query, [linkId], (err, results) => {
     if (err) {
       console.error("Error checking assessment_uuid:", err);
@@ -36,9 +39,11 @@ app.get("/api/assessment/:linkId", (req, res) => {
     }
 
     if (results.length > 0) {
+      console.log(results);
+      // If a match is found, send all details from the assessment table itself
       res.status(200).json({
-        message: "Valid assessment link",
-        data: results[0],
+        message: "Valid assessment link and details fetched",
+        data: results[0], // results[0] will contain all columns of the matching assessment record
       });
     } else {
       res.status(404).json({
