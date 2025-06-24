@@ -1,5 +1,6 @@
 import mysql.connector
 import os
+import uuid # Import uuid for generating unique IDs
 from config import DatabaseConfig, OllamaConfig
 from cv_Processor import CVProcessor
 
@@ -28,14 +29,15 @@ def setup_job_requirements():
             required_skills=["JavaScript", "React", "Node.js", "MongoDB", "Express.js", "HTML", "CSS", "REST API", "Git"],
             preferred_skills=["TypeScript", "Next.js", "Docker", "AWS"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/:assessmentId",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Engineering"
-        ),        JobRequirement(
+        ),
+        JobRequirement(
             title="UI/UX Designer",
             required_skills=["Figma", "Adobe XD", "Wireframing", "Prototyping", "User Research", "Responsive Design","UI/UX"],
             preferred_skills=["Illustrator", "Photoshop", "Accessibility", "Design Systems"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/ui-ux",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Design"
         ),
         JobRequirement(
@@ -43,7 +45,7 @@ def setup_job_requirements():
             required_skills=["Linux", "CI/CD", "Docker", "Kubernetes", "Git", "Bash"],
             preferred_skills=["Terraform", "AWS", "Monitoring", "Ansible"],
             min_experience=1,
-            test_link="https://autoscreen.ai/assessment/devops",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Infrastructure"
         ),
         JobRequirement(
@@ -51,7 +53,7 @@ def setup_job_requirements():
             required_skills=["Kotlin", "Java", "Android SDK", "REST APIs", "UI/UX Design"],
             preferred_skills=["Jetpack Compose", "Firebase", "Unit Testing"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/android",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Mobile Development"
         ),
         JobRequirement(
@@ -59,7 +61,7 @@ def setup_job_requirements():
             required_skills=["Swift", "Xcode", "iOS SDK", "UIKit", "REST APIs"],
             preferred_skills=["SwiftUI", "Core Data", "Firebase"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/ios",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Mobile Development"
         ),
         JobRequirement(
@@ -67,7 +69,7 @@ def setup_job_requirements():
             required_skills=["AWS", "GCP", "Azure", "Cloud Networking", "Security", "Terraform"],
             preferred_skills=["DevOps", "Monitoring Tools", "Serverless", "Cost Optimization"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/cloud",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Infrastructure"
         ),
         JobRequirement(
@@ -75,7 +77,7 @@ def setup_job_requirements():
             required_skills=["Manual Testing", "Automation", "Selenium", "Test Cases", "Bug Tracking", "API Testing"],
             preferred_skills=["JMeter", "Cypress", "CI/CD Integration", "Performance Testing"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/qa",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Quality Assurance"
         ),
         JobRequirement(
@@ -83,7 +85,7 @@ def setup_job_requirements():
             required_skills=["Product Roadmap", "Agile", "Scrum", "User Stories", "Market Research", "Wireframing"],
             preferred_skills=["SQL", "Analytics", "A/B Testing", "Figma"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/product",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Product"
         ),
         JobRequirement(
@@ -91,7 +93,7 @@ def setup_job_requirements():
             required_skills=["Network Security", "Vulnerability Assessment", "SIEM", "Firewalls", "Incident Response"],
             preferred_skills=["Ethical Hacking", "Penetration Testing", "SOC", "Compliance Standards"],
             min_experience=1,
-            test_link="https://autoscreen.ai/assessment/cybersecurity",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Security"
         ),
         JobRequirement(
@@ -99,7 +101,7 @@ def setup_job_requirements():
             required_skills=["Requirement Gathering", "Stakeholder Communication", "Data Analysis", "SQL", "Documentation"],
             preferred_skills=["Power BI", "Tableau", "UML", "JIRA"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/ba",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Business"
         ),
         JobRequirement(
@@ -107,7 +109,7 @@ def setup_job_requirements():
             required_skills=["Python", "SQL", "Pandas", "Excel", "Data Visualization", "Statistics"],
             preferred_skills=["Power BI", "Tableau", "Machine Learning", "BigQuery"],
             min_experience=0.5,
-            test_link="https://autoscreen.ai/assessment/data-analyst",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Data"
         ),
         JobRequirement(
@@ -115,7 +117,7 @@ def setup_job_requirements():
             required_skills=["JavaScript", "React", "HTML", "CSS", "Responsive Design", "Git", "Web APIs"],
             preferred_skills=["TypeScript", "Redux", "Webpack", "SASS"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/frontend",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Engineering"
         ),
         JobRequirement(
@@ -123,7 +125,7 @@ def setup_job_requirements():
             required_skills=["Node.js", "Express.js", "MongoDB", "REST API", "Database Design", "Git", "Authentication"],
             preferred_skills=["Python", "Docker", "Redis", "Microservices"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/backend",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="Engineering"
         ),
         JobRequirement(
@@ -131,7 +133,7 @@ def setup_job_requirements():
             required_skills=["Python", "Machine Learning", "Data Science", "TensorFlow", "Pandas", "NumPy", "Statistics"],
             preferred_skills=["PyTorch", "Deep Learning", "NLP", "Computer Vision"],
             min_experience=0,
-            test_link="https://autoscreen.ai/assessment/ai-ml",
+            test_link="https://autoscreen.ai/assessment/:assessmentId", # Placeholder for dynamic ID
             department="AI Research"
         )
     ]
@@ -171,8 +173,7 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 candidate_id INT,
                 total_positions_checked INT,
-                qualified_positions INT,
-                qualified_for TEXT,
+                qualified_positions TEXT,
                 notifications_sent INT,
                 evaluation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (candidate_id) REFERENCES candidates(id)
@@ -181,12 +182,11 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
         # Insert evaluation results
         cursor.execute("""
             INSERT INTO evaluation_logs
-            (candidate_id, total_positions_checked, qualified_positions, qualified_for, notifications_sent)
-            VALUES (%s, %s, %s, %s, %s)
+            (candidate_id, total_positions_checked, qualified_positions, notifications_sent)
+            VALUES (%s, %s, %s, %s)
         """, (
             candidate_id,
             len(evaluation_results['evaluations']),
-            len(evaluation_results['qualified_positions']),
             ', '.join(evaluation_results['qualified_positions']),
             evaluation_results['notifications_sent']
         ))
@@ -194,6 +194,39 @@ def log_evaluation_results(db_connection, candidate_id, evaluation_results):
         print(f"✅ Evaluation results logged for candidate ID: {candidate_id}")
     except Exception as e:
         print(f"⚠️ Failed to log evaluation results: {e}")
+    finally:
+        cursor.close()
+
+def store_assessment_link_in_db(db_connection, assessment_uuid, candidate_id, job_title, candidate_email):
+    """
+    Stores the unique assessment link details in the 'assessments' table.
+    Creates the table if it does not exist.
+    """
+    cursor = db_connection.cursor()
+    try:
+        # Create assessments table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS assessments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                assessment_uuid VARCHAR(255) UNIQUE NOT NULL,
+                candidate_id INT NOT NULL,
+                job_title VARCHAR(255) NOT NULL,
+                candidate_email VARCHAR(255) NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (candidate_id) REFERENCES candidates(id)
+            )
+        """)
+        # Insert assessment details
+        cursor.execute("""
+            INSERT INTO assessments
+            (assessment_uuid, candidate_id, job_title, candidate_email)
+            VALUES (%s, %s, %s, %s)
+        """, (assessment_uuid, candidate_id, job_title, candidate_email))
+        db_connection.commit()
+        print(f"✅ Assessment link (UUID: {assessment_uuid}) stored for candidate ID: {candidate_id}, Job: {job_title}")
+    except mysql.connector.Error as err:
+        print(f"⚠️ Failed to store assessment link: {err}")
+        db_connection.rollback() # Rollback on error
     finally:
         cursor.close()
 
@@ -239,6 +272,8 @@ def main():
 
     if not success:
         print("❌ CV processing failed.")
+        # Ensure db connection is closed even on early exit
+        db_connection.close()
         return
 
     print("✅ CV processing complete. Structured data inserted.")
@@ -246,6 +281,7 @@ def main():
 
     if not candidate_id:
         print("⚠️ No candidate ID retrieved from database. Cannot proceed with evaluation.")
+        db_connection.close()
         return
 
     # Fetch candidate data
@@ -254,6 +290,7 @@ def main():
 
     if not candidate_data:
         print("❌ Failed to retrieve candidate data for evaluation.")
+        db_connection.close()
         return
 
     # Initialize SkillMatcher
@@ -317,7 +354,14 @@ def main():
         if evaluation["qualified"]:
             print(f"   🎯 Candidate QUALIFIED for {job_req.title}")
             if email_sender: # Only send if email_sender was successfully configured
-                success = email_sender.send_test_invitation(candidate_data, job_req, match_details)
+                # Generate a unique assessment ID
+                unique_assessment_id = str(uuid.uuid4())
+                
+                # Store the assessment link in the database
+                store_assessment_link_in_db(db_connection, unique_assessment_id, candidate_id, job_req.title, candidate_data.get("email"))
+
+                # Pass the unique_assessment_id to the email sender
+                success = email_sender.send_test_invitation(candidate_data, job_req, match_details, unique_assessment_id)
                 if success:
                     evaluation_results["notifications_sent"] += 1
                     evaluation_results["qualified_positions"].append(job_req.title)
@@ -352,6 +396,7 @@ def main():
 
     db_connection.close()
     print("\n🏁 Process completed.")
+
 
 if __name__ == "__main__":
     main()
