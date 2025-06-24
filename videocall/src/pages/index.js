@@ -1,184 +1,120 @@
 "use client";
-import React from "react";
-import { Phone, PhoneOff, Bot, User, Volume2 } from "lucide-react";
-import useVapi from "@/hooks/use-vapi";
 
-export default function Home() {
-  const { volumeLevel, isSessionActive, conversation, toggleCall } = useVapi();
+import React, { useState, useEffect } from "react"; // Import useState and useEffect
+import Link from "next/link";
+import { v4 as uuidv4 } from "uuid"; // Import uuidv4 for generating UUIDs
+import { useRouter } from "next/router"; // Import useRouter to programmatically navigate
 
-  const getVolumeIndicator = () => {
-    const intensity = Math.floor(volumeLevel * 3);
-    return {
-      opacity: isSessionActive ? 0.3 + volumeLevel * 0.7 : 0.1,
-      scale: isSessionActive ? 1 + volumeLevel * 0.1 : 1,
-    };
+export default function HomePage() {
+  const router = useRouter(); // Initialize useRouter
+
+  // Function to generate a UUID and navigate
+  const handleTryAutoScreen = async () => {
+    const newUuid = uuidv4(); // Generate a new UUID
+    const dummyCandidateId = `candidate-${Date.now()}`; // Generate a dummy candidate ID
+    const dummyCandidateEmail = `candidate-${Date.now()}@example.com`; // Dummy email
+    const dummyJobTitle = "Software Engineer (Trial)"; // Dummy job title for the trial
+
+    try {
+      const response = await fetch(
+        `http://localhost:${
+          process.env.NEXT_PUBLIC_SERVER_PORT || 5000
+        }/api/create-trial-assessment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            assessment_uuid: newUuid,
+            candidate_id: dummyCandidateId,
+            candidate_email: dummyCandidateEmail,
+            job_title: dummyJobTitle,
+            status: "pending",
+          }),
+        }
+      );
+
+      // Log response headers and status
+      console.log("Response Status:", response.status);
+      console.log(
+        "Response Content-Type:",
+        response.headers.get("content-type")
+      );
+
+      if (!response.ok) {
+        // Attempt to parse JSON, but fall back to text if it's not JSON
+        const contentType = response.headers.get("content-type");
+        let errorBody;
+        if (contentType && contentType.includes("application/json")) {
+          errorBody = await response.json();
+        } else {
+          errorBody = await response.text(); // Read as text if not JSON
+        }
+
+        console.error("Backend Error Response (raw):", errorBody);
+        throw new Error(
+          `Failed to create trial assessment: ${response.status} - ${
+            typeof errorBody === "object"
+              ? errorBody.message || JSON.stringify(errorBody)
+              : errorBody
+          }`
+        );
+      }
+
+      const data = await response.json(); // This line will only run if response.ok is true AND content-type is JSON
+      console.log(`Trial assessment created: ${newUuid}`, data);
+      router.push(`/ai-screening/${newUuid}?candidateId=${dummyCandidateId}`);
+    } catch (error) {
+      console.error("Error creating trial assessment (frontend catch):", error);
+      alert(
+        `Failed to start trial: ${error.message}. Please check your browser's console and backend server logs.`
+      );
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF6] text-gray-900 flex flex-col">
+    <div className="min-h-screen bg-[#FFFDF6] text-gray-900 flex flex-col items-center justify-center p-8">
       {/* Header */}
-      <div className="bg-[#FAF6E9] shadow-sm p-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                isSessionActive ? "bg-[#A0C878]" : "bg-gray-400"
-              }`}
-            />
-            <span className="text-sm font-medium">
-              {isSessionActive ? "Connected" : "Disconnected"}
-            </span>
-          </div>
-          <h1 className="text-lg font-semibold">AutoScreen.ai</h1>
-          <div className="w-16" /> {/* Spacer for centering */}
+      <div className="bg-[#FAF6E9] shadow-sm p-4 w-full fixed top-0 left-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-center">
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Welcome to AutoScreen.ai
+          </h1>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-2xl mx-auto text-center">
-          {/* Avatar Section */}
-          <div className="flex items-center justify-center space-x-16 mb-12">
-            {/* AI Assistant Avatar */}
-            <div className="relative">
-              <div
-                className="w-40 h-40 rounded-full border-4 border-[#DDEB9D] bg-[#FFFDF6] flex items-center justify-center transition-all duration-300"
-                style={{
-                  transform: `scale(${getVolumeIndicator().scale})`,
-                  borderColor: isSessionActive ? "#A0C878" : "#d1d5db",
-                }}
-              >
-                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center">
-                  <Bot className="w-10 h-10 text-white" />
-                </div>
-              </div>
-              {isSessionActive && (
-                <div className="absolute inset-0 rounded-full border-4 border-[#A0C878] animate-ping opacity-20"></div>
-              )}
-            </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-2xl mx-auto pt-20">
+        <h2 className="text-4xl font-bold mb-6 text-[#A0C878]">
+          Streamline Your Hiring
+        </h2>
+        <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+          AutoScreen.ai provides an intelligent, AI-powered platform to
+          revolutionize your candidate screening process. Conduct unbiased,
+          efficient, and scalable interviews tailored to your job requirements.
+        </p>
 
-            {/* Connection Line */}
-            <div className="flex items-center">
-              <div
-                className={`h-0.5 w-12 transition-all duration-300 ${
-                  isSessionActive ? "bg-[#A0C878]" : "bg-gray-300"
-                }`}
-              >
-                {isSessionActive && (
-                  <div className="h-full bg-[#A0C878] animate-pulse"></div>
-                )}
-              </div>
-              <div className="flex space-x-1 mx-2">
-                <div
-                  className={`w-1 h-1 rounded-full ${
-                    isSessionActive ? "bg-[#A0C878]" : "bg-gray-300"
-                  }`}
-                ></div>
-                <div
-                  className={`w-1 h-1 rounded-full ${
-                    isSessionActive ? "bg-[#A0C878]" : "bg-gray-300"
-                  } ${isSessionActive ? "animate-pulse" : ""}`}
-                ></div>
-                <div
-                  className={`w-1 h-1 rounded-full ${
-                    isSessionActive ? "bg-[#A0C878]" : "bg-gray-300"
-                  }`}
-                ></div>
-              </div>
-              <div
-                className={`h-0.5 w-12 transition-all duration-300 ${
-                  isSessionActive ? "bg-[#A0C878]" : "bg-gray-300"
-                }`}
-              ></div>
-            </div>
+        <div className="space-y-4">
+          <p className="text-xl font-medium text-gray-800">
+            Ready to try AutoScreen.ai?
+          </p>
+          <p className="text-md text-gray-600 mb-4">
+            Experience an AI-powered job screening tailored for a typical role.
+          </p>
 
-            {/* User Avatar */}
-            <div className="relative">
-              <div
-                className="w-40 h-40 rounded-full border-4 border-[#DDEB9D] bg-[#FFFDF6] flex items-center justify-center transition-all duration-300"
-                style={{
-                  borderColor: isSessionActive ? "#A0C878" : "#d1d5db",
-                }}
-              >
-                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center relative">
-                  <User className="w-10 h-10 text-white" />
-                  {/* Headphones icon overlay */}
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
-                    <div className="w-6 h-6 border-2 border-white rounded-full bg-transparent"></div>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Control Buttons */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
-            <button
-              onClick={toggleCall}
-              className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
-                isSessionActive
-                  ? "bg-[#DDEB9D] text-gray-700 hover:bg-[#A0C878] border border-[#A0C878]"
-                  : "bg-[#A0C878] text-white hover:bg-[#DDEB9D] shadow-lg"
-              }`}
-            >
-              {isSessionActive ? "Terminate" : "Start"}
-            </button>
-          </div>
-
-          {/* Audio Level Indicator */}
-          {isSessionActive && (
-            <div className="bg-[#FAF6E9] rounded-lg p-4 shadow-sm border border-gray-200 mb-6">
-              <div className="flex items-center justify-center space-x-2">
-                <Volume2 className="w-4 h-4 text-gray-600" />
-                <div className="flex space-x-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-1 h-6 rounded-full transition-all duration-150 ${
-                        i < Math.floor(volumeLevel * 10)
-                          ? "bg-[#A0C878]"
-                          : "bg-gray-200"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-600 ml-2">
-                  {Math.round(volumeLevel * 100)}%
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Conversation Display */}
-          {isSessionActive && conversation.length > 0 && (
-            <div className="bg-[#FAF6E9] rounded-lg shadow-sm border border-gray-200 max-w-md mx-auto">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-medium text-gray-900">Live Conversation</h3>
-              </div>
-              <div className="p-4 space-y-3 max-h-48 overflow-y-auto">
-                {conversation.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${
-                      msg.role === "assistant" ? "justify-start" : "justify-end"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                        msg.role === "assistant"
-                          ? "bg-gray-100 text-gray-800"
-                          : "bg-[#A0C878] text-white"
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <button
+            onClick={handleTryAutoScreen}
+            className="inline-block bg-[#A0C878] text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#DDEB9D] hover:text-gray-700 transition-colors shadow-lg transform hover:scale-105"
+          >
+            Try AutoScreen.ai Now!
+          </button>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="w-full text-center p-4 text-gray-500 text-sm mt-auto">
+        &copy; {new Date().getFullYear()} AutoScreen.ai. All rights reserved.
       </div>
     </div>
   );

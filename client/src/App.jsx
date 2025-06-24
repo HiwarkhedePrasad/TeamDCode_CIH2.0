@@ -10,6 +10,7 @@ import InterviewerInterface from "./InterviewAssessment/InterViewPlatform";
 import InterviewPlatform from "./InterviewAssessment/InterViewPlatform";
 import VapiInterviewAgent from "./InterviewAssessment/VapiInterviewAgent";
 import VapiWidget from "./InterviewAssessment/VapiInterviewAgent";
+import ResumeUpload from "./resumeUpload";
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
       <Navbar /> {/* ✅ Moved outside Routes */}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/resume" element={<ResumeUpload />} />
         {/* <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} /> */}
